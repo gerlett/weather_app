@@ -243,8 +243,8 @@ views:
               **Stationsmesswerte** über das offizielle AWEKAS-Widget, alle anderen Werte
               aus Open-Meteo-Modelldaten für den Standort (Aktualisierung alle 15 min).
 
-              [Zur Website: Verlauf, Klima & Auswertung](http://192.168.178.95:8883)
-              · [Rohdaten (JSON)](http://192.168.178.95:8883/api/ha/perg-thurnhof.json)
+              [Zur Website: Verlauf, Klima & Auswertung](https://wetter.softwarekstatt.at)
+              · [Rohdaten (JSON)](https://wetter.softwarekstatt.at/api/ha/perg-thurnhof.json)
 
   # ===================================================================== region
   - title: Region

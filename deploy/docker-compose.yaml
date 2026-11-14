@@ -22,6 +22,7 @@ services:
       - "8883:80"
     volumes:
       - ./html:/usr/share/nginx/html:ro
+      - ./changelog:/usr/share/nginx/changelog:ro   # deploy-changelog.sh, beside the build
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./om-proxy.inc:/etc/nginx/om-proxy.inc:ro
       - om-cache:/var/cache/nginx/om          # proxy cache survives container recreation
@@ -50,6 +51,8 @@ services:
   #
   # In the dashboard, point the tunnel's public hostname at
   #   http://wetter-strudengau:80      (compose network, survives a host-IP change)
+  # or http://192.168.178.95:8883 (LAN address – the current setup for
+  # https://wetter.softwarekstatt.at).
   #
   # Use a hostname ONE label under your zone (e.g. wetter.<your-domain>):
   # Cloudflare's free Universal SSL covers only <zone> and *.<zone>.

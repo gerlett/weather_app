@@ -1,0 +1,23 @@
+{
+  "entries": [
+    {
+      "version": "0.1.1",
+      "date": "2026-11-14",
+      "items": [
+        { "de": "Versionsnummer im Fußbereich der Seite und neue Seite „Änderungen“ mit allen Neuerungen und einer Suche." },
+        { "de": "Nach einem Update zeigt die Website wiederkehrenden Besuchern einmal kurz, was neu ist." }
+      ]
+    },
+    {
+      "version": "0.1.0",
+      "date": "2026-11-14",
+      "items": [
+        { "de": "Neue Website für die Wetterstation Perg/Thurnhof und den Strudengau: aktuelle Werte, Vorhersage, Verlauf, Windrose, Klima und das AWEKAS-Stationswidget auf einer Seite." },
+        { "de": "Beim Start wird – mit Ihrer Erlaubnis – die nächstgelegene Station gewählt; weitere Orte lassen sich suchen und als Favoriten merken." },
+        { "de": "Zeitraum-Auswertung: alle Messwerte für frei wählbare Zeiträume zurück bis 1940, mit Summen bzw. Minimum, Maximum und Mittelwert je Stunde, Tag, Woche, Monat oder Jahr – auch als CSV." },
+        { "de": "Die wichtigsten Werte aktualisieren sich jede Minute von selbst, Änderungen werden kurz hervorgehoben." },
+        { "de": "Erreichbar unter https://wetter.softwarekstatt.at; Impressum und Datenschutz im einklappbaren Bereich ganz unten." }
+      ]
+    }
+  ]
+}
