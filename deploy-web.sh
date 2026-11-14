@@ -58,8 +58,9 @@ if [ "$NO_PROVISION" -eq 1 ] && [ "$UPDATE_STACK" -eq 1 ]; then
   exit 1
 fi
 
-VERSION="$(sed -n -E 's/.*"version"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/p' package.json | head -n1)"
-GIT_HASH="$(git rev-parse --short HEAD 2>/dev/null || echo nogit)"
+# <major>.<minor>.<patch>: version.json + git commit count (scripts/app-version.ts).
+VERSION="$(node --no-warnings scripts/app-version.ts)"
+GIT_HASH="$(git rev-parse --short HEAD)"
 DIRTY=""
 git diff --quiet HEAD 2>/dev/null || DIRTY="-dirty"
 BUILD_ID="$VERSION-$GIT_HASH$DIRTY-$(date -u +%Y%m%d%H%M%S)"
@@ -125,7 +126,9 @@ if [ "$SKIP_BUILD" -eq 0 ]; then
   rm -rf out
   # Same-origin caching proxy on the server (deploy/nginx.conf). The MSYS guards keep
   # Git Bash from rewriting the leading-slash value into a Windows path.
-  MSYS_NO_PATHCONV=1 MSYS2_ENV_CONV_EXCL="NEXT_PUBLIC_OM_PROXY" NEXT_PUBLIC_OM_PROXY=/api/om npm run build
+  # Version + commit are built in and shown in the footer (src/lib/version.ts).
+  MSYS_NO_PATHCONV=1 MSYS2_ENV_CONV_EXCL="NEXT_PUBLIC_OM_PROXY" NEXT_PUBLIC_OM_PROXY=/api/om \
+    NEXT_PUBLIC_APP_VERSION="$VERSION" NEXT_PUBLIC_GIT_HASH="$GIT_HASH$DIRTY" npm run build
 fi
 [ -f out/index.html ] || { echo "out/index.html not found – build first (without --skip-build)." >&2; exit 1; }
 [ -f out/auswertung.html ] || { echo "out/auswertung.html missing – incomplete build?" >&2; exit 1; }
@@ -133,6 +136,10 @@ fi
 # value must not have been mangled into a Windows path by Git Bash).
 grep -rqs '"/api/om"' out/_next/static || grep -rqs '/api/om/forecast' out/_next/static || {
   echo "Build does not use the /api/om proxy – rebuild without --skip-build." >&2
+  exit 1
+}
+grep -rqsF "\"$VERSION\"" out/_next/static || {
+  echo "Build does not carry version $VERSION – rebuild without --skip-build." >&2
   exit 1
 }
 
@@ -166,4 +173,4 @@ tar czf - -C "$STAGE" . | ssh ${SSH_OPTS[@]+"${SSH_OPTS[@]}"} "$REMOTE_USER@$REM
 echo
 echo "Deploy complete: $BUILD_ID"
 echo "  LAN:    http://$REMOTE_HOST:$PORT"
-echo "  Public: via the Cloudflare tunnel hostname (if a token is configured)"
+echo "  Public: https://wetter.softwarekstatt.at (Cloudflare tunnel)"

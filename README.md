@@ -77,7 +77,26 @@ installed on the host and the tunnel container starts. In the dashboard point th
 at `http://wetter-strudengau:80`. Without a token only the LAN site runs.
 
 Note: browsers allow location access only on HTTPS (or localhost) – the nearest-station detection
-works via the Cloudflare hostname, not on `http://192.168.178.95:8883`.
+works via the public hostname https://wetter.softwarekstatt.at, not on `http://192.168.178.95:8883`.
+
+### Version & changelog
+
+Same scheme as the CRM. The version is `<major>.<minor>.<patch>`: major, minor and an
+**offset** come from `version.json`, the patch is `git rev-list --count HEAD − offset` – it rises
+with every commit, nothing is bumped by hand. `deploy-web.sh` builds it in together with the
+commit hash (`-dirty` for uncommitted changes); the footer shows e.g. `Version 0.1.3 (a1b2c3d)`,
+`/version.json` carries it too. A bare `npm run dev`/`build` is labelled "Entwicklungsversion".
+
+```bash
+node scripts/app-version.ts               # version of the checked-out commit
+node scripts/app-version.ts --start 0.2   # next commit becomes 0.2.0 (commit version.json)
+```
+
+The changelog lives in `deploy/changelog/changelog.json`, **outside the build**: nginx serves it at
+`/changelog/` from a directory beside `html/`. Write an entry after a deploy, using the version the
+footer shows, then `./deploy-changelog.sh` (no rebuild). The site lists all releases with a search
+on `/aenderungen`, and returning visitors see a "Neu auf der Website" card once per new release
+(never for releases newer than the running build). Details: `deploy/changelog/README.md`.
 
 ## Server-side API proxy & Home Assistant
 

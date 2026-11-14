@@ -53,7 +53,7 @@ sync_bridge() {
 # --- 1. replace the site in place ---------------------------------------------
 # Contents are swapped, not the directory: the container bind-mounts html/ by
 # inode, so a renamed/new directory would keep serving the old build.
-mkdir -p html
+mkdir -p html changelog   # changelog/: deploy-changelog.sh, never touched here
 find html -mindepth 1 -delete
 cp -a "$IN/html/." html/
 echo "Site updated ($(cat html/version.json 2>/dev/null || echo 'no version.json'))."

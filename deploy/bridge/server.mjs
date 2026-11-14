@@ -17,7 +17,7 @@ import mqtt from "mqtt";
 const env = process.env;
 const VERSION = env.BRIDGE_VERSION || "1.0.0";
 const OM_BASE = (env.OM_BASE || "http://wetter-strudengau/api/om").replace(/\/$/, "");
-const PUBLIC_URL = env.PUBLIC_URL || "http://192.168.178.95:8883";
+const PUBLIC_URL = env.PUBLIC_URL || "https://wetter.softwarekstatt.at";
 const PREFIX = env.DISCOVERY_PREFIX || "homeassistant";
 const BASE = env.MQTT_BASE_TOPIC || "wetter_strudengau";
 const CURRENT_MS = (Number(env.CURRENT_INTERVAL_S) || 300) * 1000;
