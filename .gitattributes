@@ -1,0 +1,5 @@
+# Files that run or are read on the Linux Docker host must keep LF line endings,
+# even when checked out on Windows (core.autocrlf) – bash fails on CRLF scripts.
+*.sh            text eol=lf
+deploy/**       text eol=lf
+scripts/**      text eol=lf

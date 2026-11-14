@@ -7,32 +7,47 @@ set -euo pipefail
 
 APP_DIR="$1" CONTAINER="$2" PORT="$3" NO_PROVISION="$4" UPDATE_STACK="$5"
 IN="$APP_DIR/.incoming"
+STACK_FILES="docker-compose.yaml nginx.conf om-proxy.inc"
+ENV_FILES=".env .env.bridge"
 cd "$APP_DIR"
+
+has_service() { grep -qE "^  $1:" docker-compose.yaml 2>/dev/null; }
 
 # Compose with the tunnel only when .env carries a token.
 compose_up() {
-  local extra=("$@")
-  if [ -f .env ] && grep -qE '^CLOUDFLARED_TUNNEL_TOKEN=.+' .env; then
-    docker compose --profile tunnel up -d "${extra[@]}"
-    echo "Stack up (web + Cloudflare tunnel)."
-  else
-    docker compose up -d "${extra[@]}"
-    echo "Stack up (web only – no tunnel token in $APP_DIR/.env)."
-  fi
+  local profile=()
+  if [ -f .env ] && grep -qE '^CLOUDFLARED_TUNNEL_TOKEN=.+' .env; then profile=(--profile tunnel); fi
+  docker compose "${profile[@]}" up -d "$@"
+  if [ "${#profile[@]}" -gt 0 ]; then echo "Stack up (incl. Cloudflare tunnel)."; else echo "Stack up (no tunnel token in $APP_DIR/.env)."; fi
 }
 
 validate_nginx() {
   docker compose run --rm --no-deps -T "$CONTAINER" nginx -t
 }
 
-install_env_if_missing() {
-  if [ -f "$IN/.stack/.env" ] && [ ! -f .env ]; then
-    mv "$IN/.stack/.env" .env
-    chmod 600 .env
-    echo "Installed missing .env."
-    return 0
-  fi
-  return 1
+# Env files hold the only copies of their secrets: installed when missing, never overwritten.
+install_missing_env() {
+  local installed=1 f
+  for f in $ENV_FILES; do
+    if [ -f "$IN/.stack/$f" ] && [ ! -f "$f" ]; then
+      mv "$IN/.stack/$f" "$f"
+      chmod 600 "$f"
+      echo "Installed missing $f."
+      installed=0
+    fi
+  done
+  return $installed
+}
+
+# Bridge code is generated/committed code, never hand-edited on the host → always synced.
+BRIDGE_CHANGED=0
+sync_bridge() {
+  [ -d "$IN/.stack/bridge" ] || return 0
+  if [ -d bridge ] && diff -rq "$IN/.stack/bridge" bridge >/dev/null 2>&1; then return 0; fi
+  rm -rf bridge
+  cp -a "$IN/.stack/bridge" bridge
+  BRIDGE_CHANGED=1
+  echo "Bridge code updated."
 }
 
 # --- 1. replace the site in place ---------------------------------------------
@@ -50,32 +65,41 @@ elif [ ! -f docker-compose.yaml ]; then
   echo "No stack on this host yet – provisioning $CONTAINER ..."
   if command -v ss >/dev/null && ss -ltnH "sport = :$PORT" | grep -q .; then
     echo "Port $PORT is already in use on this host – refusing to provision." >&2
-    echo "Free it or deploy with PORT=<other> (and adjust docker-compose.yaml)." >&2
     exit 1
   fi
-  mv "$IN/.stack/docker-compose.yaml" docker-compose.yaml
-  [ -f nginx.conf ] && echo "Kept existing nginx.conf." || mv "$IN/.stack/nginx.conf" nginx.conf
-  install_env_if_missing || true
+  for f in $STACK_FILES; do
+    if [ -f "$f" ]; then echo "Kept existing $f."; else mv "$IN/.stack/$f" "$f"; fi
+  done
+  install_missing_env || true
+  sync_bridge
   validate_nginx
-  compose_up
+  compose_up --build
   echo "Container $CONTAINER is up on port $PORT."
 elif [ "$UPDATE_STACK" = 1 ]; then
   STAMP="$(date +%Y%m%d-%H%M%S)"
-  for f in docker-compose.yaml nginx.conf; do
-    if ! cmp -s "$IN/.stack/$f" "$f"; then
+  for f in $STACK_FILES; do
+    if [ -f "$f" ] && ! cmp -s "$IN/.stack/$f" "$f"; then
       cp -p "$f" "$f.$STAMP"
       echo "Backed up $f as $f.$STAMP"
     fi
     cp "$IN/.stack/$f" "$f"
   done
-  install_env_if_missing || true
+  install_missing_env || true
+  sync_bridge
   validate_nginx
-  # nginx.conf is a single-file bind mount (pinned by inode) → recreate to pick it up.
-  compose_up --force-recreate
+  # single-file bind mounts are pinned by inode → recreate nginx to pick up the new config
+  compose_up --build --force-recreate
 else
-  echo "Existing stack found – docker-compose.yaml/nginx.conf left untouched (use --update-stack to replace)."
-  if install_env_if_missing; then
-    compose_up
+  echo "Existing stack found – stack files left untouched (use --update-stack to replace)."
+  sync_bridge
+  if install_missing_env; then
+    compose_up --build
+  elif [ "$BRIDGE_CHANGED" = 1 ]; then
+    if has_service wetter-bridge; then
+      docker compose up -d --build wetter-bridge
+    else
+      echo "Note: the host's docker-compose.yaml has no wetter-bridge service yet – run with --update-stack once."
+    fi
   fi
 fi
 
