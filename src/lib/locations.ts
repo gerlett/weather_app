@@ -48,6 +48,4 @@ export const SITE_LINKS = {
   extremes: "https://www.wetter-strudengau.at/extremereignisse/",
   media: "https://www.wetter-strudengau.at/strudengauer-wetterfernsehen/",
   station: "https://www.wetter-strudengau.at/startseite/wetterstation/",
-  contact: "https://www.wetter-strudengau.at/kontakt/",
-  imprint: "https://www.wetter-strudengau.at/kontakt/impressum/",
 };
