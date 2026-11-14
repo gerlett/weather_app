@@ -16,7 +16,7 @@
 #   ./deploy-web.sh                   # build + deploy (+ provision on first deploy)
 #   ./deploy-web.sh --skip-build      # deploy the existing out/
 #   ./deploy-web.sh --no-provision    # only replace html/, never touch the stack
-#   ./deploy-web.sh --update-stack    # also replace docker-compose.yaml/nginx.conf on the
+#   ./deploy-web.sh --update-stack    # also replace docker-compose.yaml/nginx.conf/om-proxy.inc on the
 #                                     # host (old copies are backed up) and restart the stack
 #
 # First deploy: docker-compose.yaml, nginx.conf and (if present) deploy/.env ride
@@ -64,9 +64,15 @@ DIRTY=""
 git diff --quiet HEAD 2>/dev/null || DIRTY="-dirty"
 BUILD_ID="$VERSION-$GIT_HASH$DIRTY-$(date -u +%Y%m%d%H%M%S)"
 
-for f in docker-compose.yaml nginx.conf remote-install.sh; do
+for f in docker-compose.yaml nginx.conf om-proxy.inc remote-install.sh bridge/server.mjs bridge/Dockerfile bridge/package-lock.json; do
   [ -f "$STACK/$f" ] || { echo "'$STACK/$f' not found." >&2; exit 1; }
 done
+
+# Home Assistant bridge credentials – optional, without them the bridge serves JSON only.
+if [ ! -f "$STACK/.env.bridge" ]; then
+  echo "Note: no $STACK/.env.bridge – the Home Assistant bridge runs without MQTT." >&2
+  echo "      Copy $STACK/.env.bridge.example to $STACK/.env.bridge and fill it in." >&2
+fi
 
 # The tunnel token is optional, but say clearly what happens without it.
 HAS_ENV=0
@@ -117,18 +123,36 @@ if [ "$SKIP_BUILD" -eq 0 ]; then
   [ -d node_modules ] || npm ci
   npm run lint
   rm -rf out
-  npm run build
+  # Same-origin caching proxy on the server (deploy/nginx.conf). The MSYS guards keep
+  # Git Bash from rewriting the leading-slash value into a Windows path.
+  MSYS_NO_PATHCONV=1 MSYS2_ENV_CONV_EXCL="NEXT_PUBLIC_OM_PROXY" NEXT_PUBLIC_OM_PROXY=/api/om npm run build
 fi
 [ -f out/index.html ] || { echo "out/index.html not found – build first (without --skip-build)." >&2; exit 1; }
 [ -f out/auswertung.html ] || { echo "out/auswertung.html missing – incomplete build?" >&2; exit 1; }
+# The build must talk to the server's proxy, not to Open-Meteo directly (and the
+# value must not have been mangled into a Windows path by Git Bash).
+grep -rqs '"/api/om"' out/_next/static || grep -rqs '/api/om/forecast' out/_next/static || {
+  echo "Build does not use the /api/om proxy – rebuild without --skip-build." >&2
+  exit 1
+}
 
 # --- stage: html/ + stack files -----------------------------------------------
 STAGE="$(mktemp -d)"
 mkdir -p "$STAGE/html" "$STAGE/.stack"
 cp -a out/. "$STAGE/html/"
 printf '{"version":"%s","commit":"%s%s","buildId":"%s"}\n' "$VERSION" "$GIT_HASH" "$DIRTY" "$BUILD_ID" > "$STAGE/html/version.json"
-cp "$STACK/docker-compose.yaml" "$STACK/nginx.conf" "$STACK/remote-install.sh" "$STAGE/.stack/"
+cp "$STACK/docker-compose.yaml" "$STACK/nginx.conf" "$STACK/om-proxy.inc" "$STACK/remote-install.sh" "$STAGE/.stack/"
 if [ "$HAS_ENV" -eq 1 ]; then cp "$STACK/.env" "$STAGE/.stack/.env"; fi
+if [ -f "$STACK/.env.bridge" ]; then cp "$STACK/.env.bridge" "$STAGE/.stack/.env.bridge"; fi
+
+# Bridge build context; its station list is exported from the site's own definitions
+# (src/lib/locations.ts – Node runs the TypeScript file directly), so both never drift apart.
+mkdir -p "$STAGE/.stack/bridge"
+cp "$STACK/bridge/server.mjs" "$STACK/bridge/package.json" "$STACK/bridge/package-lock.json" \
+   "$STACK/bridge/Dockerfile" "$STACK/bridge/.dockerignore" "$STAGE/.stack/bridge/"
+node --no-warnings -e 'import("./src/lib/locations.ts").then(m => process.stdout.write(JSON.stringify(m.REGIONAL_STATIONS, null, 1)))' \
+  > "$STAGE/.stack/bridge/stations.json"
+cp "$STAGE/.stack/bridge/stations.json" "$STACK/bridge/stations.json"   # keep the local copy current
 
 echo "Deploying $BUILD_ID to $REMOTE_HOST:$APP_DIR (container '$CONTAINER', port $PORT) ..."
 

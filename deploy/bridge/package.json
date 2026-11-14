@@ -1,0 +1,11 @@
+{
+  "name": "wetter-bridge",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Home Assistant MQTT bridge for the Wetter Strudengau website (no database).",
+  "type": "module",
+  "main": "server.mjs",
+  "scripts": { "start": "node server.mjs" },
+  "engines": { "node": ">=22" },
+  "dependencies": { "mqtt": "^5.14.1" }
+}

@@ -7,9 +7,15 @@
  */
 import type { WeatherLocation } from "./locations";
 
-const FORECAST = "https://api.open-meteo.com/v1/forecast";
-const ARCHIVE = "https://archive-api.open-meteo.com/v1/archive";
-const GEOCODING = "https://geocoding-api.open-meteo.com/v1/search";
+/**
+ * API base. Deployed builds go through the server's caching proxy (same origin,
+ * shared cache, see deploy/nginx.conf): deploy-web.sh builds with
+ * NEXT_PUBLIC_OM_PROXY=/api/om. Without it (local `npm run dev`) Open-Meteo is called directly.
+ */
+const PROXY = process.env.NEXT_PUBLIC_OM_PROXY;
+const FORECAST = PROXY ? `${PROXY}/forecast` : "https://api.open-meteo.com/v1/forecast";
+const ARCHIVE = PROXY ? `${PROXY}/archive` : "https://archive-api.open-meteo.com/v1/archive";
+const GEOCODING = PROXY ? `${PROXY}/geocoding` : "https://geocoding-api.open-meteo.com/v1/search";
 
 // ---------------------------------------------------------------- fetching, caching, rate limits
 //

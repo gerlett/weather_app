@@ -1,0 +1,320 @@
+# Home Assistant dashboard "Wetter" – YAML mode, built-in cards only (no HACS needed).
+# Installed as <ha-config>/dashboards/wetter_strudengau.yaml and registered in
+# configuration.yaml under lovelace: dashboards: wetter-strudengau.
+# Edits to this file show up after a browser refresh (no HA restart needed).
+#
+# Entities come from wetter-bridge via MQTT discovery (sensor.wetter_<station>_*)
+# and the template weather entities in packages/wetter_strudengau.yaml.
+
+title: Wetter Strudengau
+views:
+  # ===================================================================== Perg / Thurnhof
+  - title: Perg / Thurnhof
+    path: perg
+    icon: mdi:weather-partly-cloudy
+    type: sections
+    max_columns: 4
+    sections:
+      # ------------------------------------------------------------- now
+      - type: grid
+        cards:
+          - type: heading
+            heading: Aktuell
+            icon: mdi:map-marker-radius
+            badges:
+              - type: entity
+                entity: sensor.wetter_perg_thurnhof_condition_text
+                show_state: true
+                show_icon: true
+              - type: entity
+                entity: sensor.wetter_perg_thurnhof_value_time
+                show_state: true
+                show_icon: true
+          - type: weather-forecast
+            entity: weather.wetter_perg_thurnhof
+            name: Perg / Thurnhof
+            show_current: true
+            show_forecast: true
+            forecast_type: hourly
+            grid_options:
+              columns: full
+          - type: tile
+            entity: sensor.wetter_perg_thurnhof_temperature
+            name: Temperatur
+            grid_options: { columns: 6 }
+          - type: tile
+            entity: sensor.wetter_perg_thurnhof_apparent_temperature
+            name: Gefühlt
+            grid_options: { columns: 6 }
+          - type: tile
+            entity: sensor.wetter_perg_thurnhof_humidity
+            name: Luftfeuchte
+            grid_options: { columns: 6 }
+          - type: tile
+            entity: sensor.wetter_perg_thurnhof_dew_point
+            name: Taupunkt
+            grid_options: { columns: 6 }
+          - type: tile
+            entity: sensor.wetter_perg_thurnhof_pressure
+            name: Luftdruck
+            grid_options: { columns: 6 }
+          - type: tile
+            entity: sensor.wetter_perg_thurnhof_pressure_tendency
+            name: Tendenz
+            icon: mdi:chart-line-variant
+            grid_options: { columns: 6 }
+
+      # ------------------------------------------------------------- wind, rain, sun
+      - type: grid
+        cards:
+          - type: heading
+            heading: Wind · Regen · Sonne
+            icon: mdi:weather-windy
+          - type: tile
+            entity: sensor.wetter_perg_thurnhof_wind_speed
+            name: Wind
+            grid_options: { columns: 6 }
+          - type: tile
+            entity: sensor.wetter_perg_thurnhof_wind_gusts
+            name: Böen
+            icon: mdi:weather-windy-variant
+            grid_options: { columns: 6 }
+          - type: tile
+            entity: sensor.wetter_perg_thurnhof_wind_direction
+            name: Richtung
+            grid_options: { columns: 6 }
+          - type: tile
+            entity: sensor.wetter_perg_thurnhof_beaufort
+            name: Windstärke
+            grid_options: { columns: 6 }
+          - type: tile
+            entity: sensor.wetter_perg_thurnhof_rain_today
+            name: Regen heute
+            icon: mdi:weather-pouring
+            grid_options: { columns: 6 }
+          - type: tile
+            entity: sensor.wetter_perg_thurnhof_precipitation
+            name: Regen aktuell
+            icon: mdi:weather-rainy
+            grid_options: { columns: 6 }
+          - type: tile
+            entity: sensor.wetter_perg_thurnhof_uv_index
+            name: UV-Index
+            grid_options: { columns: 6 }
+          - type: tile
+            entity: sensor.wetter_perg_thurnhof_cloud_cover
+            name: Bewölkung
+            grid_options: { columns: 6 }
+          - type: gauge
+            entity: sensor.wetter_perg_thurnhof_uv_index
+            name: UV
+            min: 0
+            max: 11
+            needle: true
+            severity:
+              green: 0
+              yellow: 3
+              red: 6
+            grid_options: { columns: 6 }
+          - type: gauge
+            entity: sensor.wetter_perg_thurnhof_humidity
+            name: Feuchte
+            min: 0
+            max: 100
+            needle: true
+            grid_options: { columns: 6 }
+
+      # ------------------------------------------------------------- today & forecast
+      - type: grid
+        cards:
+          - type: heading
+            heading: Heute & 7 Tage
+            icon: mdi:calendar-weather
+          - type: entities
+            state_color: true
+            entities:
+              - entity: sensor.wetter_perg_thurnhof_temp_max_today
+                name: Höchstwert
+                icon: mdi:thermometer-chevron-up
+              - entity: sensor.wetter_perg_thurnhof_temp_min_today
+                name: Tiefstwert
+                icon: mdi:thermometer-chevron-down
+              - entity: sensor.wetter_perg_thurnhof_precipitation_forecast_today
+                name: Regen-Prognose
+              - entity: sensor.wetter_perg_thurnhof_precipitation_probability_today
+                name: Regenwahrscheinlichkeit
+              - entity: sensor.wetter_perg_thurnhof_sunshine_today
+                name: Sonnenschein
+                icon: mdi:white-balance-sunny
+              - type: divider
+              - entity: sensor.wetter_perg_thurnhof_sunrise
+                name: Sonnenaufgang
+                format: time
+                icon: mdi:weather-sunset-up
+              - entity: sensor.wetter_perg_thurnhof_sunset
+                name: Sonnenuntergang
+                format: time
+                icon: mdi:weather-sunset-down
+          - type: weather-forecast
+            entity: weather.wetter_perg_thurnhof
+            show_current: false
+            show_forecast: true
+            forecast_type: daily
+            grid_options:
+              columns: full
+
+      # ------------------------------------------------------------- history
+      - type: grid
+        column_span: 2
+        cards:
+          - type: heading
+            heading: Verlauf
+            icon: mdi:chart-bell-curve-cumulative
+          - type: history-graph
+            title: Temperatur · 48 h
+            hours_to_show: 48
+            entities:
+              - entity: sensor.wetter_perg_thurnhof_temperature
+                name: Temperatur
+              - entity: sensor.wetter_perg_thurnhof_apparent_temperature
+                name: Gefühlt
+              - entity: sensor.wetter_perg_thurnhof_dew_point
+                name: Taupunkt
+            grid_options:
+              columns: full
+          - type: history-graph
+            title: Wind · 48 h
+            hours_to_show: 48
+            entities:
+              - entity: sensor.wetter_perg_thurnhof_wind_speed
+                name: Wind
+              - entity: sensor.wetter_perg_thurnhof_wind_gusts
+                name: Böen
+            grid_options:
+              columns: full
+          - type: statistics-graph
+            title: Luftdruck · 7 Tage
+            entities:
+              - entity: sensor.wetter_perg_thurnhof_pressure
+                name: Luftdruck
+            stat_types: [mean, min, max]
+            period: hour
+            days_to_show: 7
+            chart_type: line
+            grid_options:
+              columns: 6
+          - type: statistics-graph
+            title: Regen pro Tag · 14 Tage
+            entities:
+              - entity: sensor.wetter_perg_thurnhof_rain_today
+                name: Niederschlag
+            stat_types: [change]
+            period: day
+            days_to_show: 14
+            chart_type: bar
+            grid_options:
+              columns: 6
+          - type: statistics-graph
+            title: Temperatur Tagesspanne · 30 Tage
+            entities:
+              - entity: sensor.wetter_perg_thurnhof_temperature
+                name: Temperatur
+            stat_types: [min, mean, max]
+            period: day
+            days_to_show: 30
+            chart_type: line
+            grid_options:
+              columns: full
+
+      # ------------------------------------------------------------- station live + links
+      - type: grid
+        cards:
+          - type: heading
+            heading: Station live
+            icon: mdi:access-point
+          - type: iframe
+            title: AWEKAS · Station 12182
+            url: https://widget.awekas.at/widget4.php?id=12182&lng=de&uni=c&wuni=km&rad=0
+            aspect_ratio: 50%
+            grid_options:
+              columns: full
+          - type: markdown
+            content: >-
+              **Stationsmesswerte** über das offizielle AWEKAS-Widget, alle anderen Werte
+              aus Open-Meteo-Modelldaten für den Standort (Aktualisierung alle 15 min).
+
+              [Zur Website: Verlauf, Klima & Auswertung](http://192.168.178.95:8883)
+              · [Rohdaten (JSON)](http://192.168.178.95:8883/api/ha/perg-thurnhof.json)
+
+  # ===================================================================== region
+  - title: Region
+    path: region
+    icon: mdi:map-legend
+    type: sections
+    max_columns: 4
+    sections:
+      - type: grid
+        column_span: 2
+        cards:
+          - type: heading
+            heading: Strudengau jetzt
+            icon: mdi:weather-cloudy-clock
+          - { type: tile, entity: weather.wetter_perg_thurnhof, name: Perg / Thurnhof, grid_options: { columns: 6 } }
+          - { type: tile, entity: weather.wetter_naarn_im_machlande, name: Naarn, grid_options: { columns: 6 } }
+          - { type: tile, entity: weather.wetter_ried_in_der_riedmark, name: Ried i. d. Riedmark, grid_options: { columns: 6 } }
+          - { type: tile, entity: weather.wetter_grein, name: Grein, grid_options: { columns: 6 } }
+          - { type: tile, entity: weather.wetter_bad_kreuzen, name: Bad Kreuzen, grid_options: { columns: 6 } }
+          - { type: tile, entity: weather.wetter_pabneukirchen, name: Pabneukirchen, grid_options: { columns: 6 } }
+          - { type: tile, entity: weather.wetter_burgstall, name: Burgstall, grid_options: { columns: 6 } }
+          - { type: tile, entity: weather.wetter_dimbach, name: Dimbach, grid_options: { columns: 6 } }
+          - { type: tile, entity: weather.wetter_st_georgen_am_walde, name: St. Georgen a. W., grid_options: { columns: 6 } }
+          - { type: tile, entity: weather.wetter_waldhausen_im_strudengau, name: Waldhausen, grid_options: { columns: 6 } }
+      - type: grid
+        column_span: 2
+        cards:
+          - type: heading
+            heading: Temperaturvergleich
+            icon: mdi:compare-horizontal
+          - type: history-graph
+            title: Temperatur · 24 h
+            hours_to_show: 24
+            entities:
+              - { entity: sensor.wetter_perg_thurnhof_temperature, name: Perg }
+              - { entity: sensor.wetter_grein_temperature, name: Grein }
+              - { entity: sensor.wetter_st_georgen_walde_temperature, name: St. Georgen a. W. }
+              - { entity: sensor.wetter_waldhausen_temperature, name: Waldhausen }
+              - { entity: sensor.wetter_pabneukirchen_temperature, name: Pabneukirchen }
+            grid_options:
+              columns: full
+          - type: glance
+            title: Regen heute
+            columns: 5
+            entities:
+              - { entity: sensor.wetter_perg_thurnhof_rain_today, name: Perg }
+              - { entity: sensor.wetter_naarn_rain_today, name: Naarn }
+              - { entity: sensor.wetter_grein_rain_today, name: Grein }
+              - { entity: sensor.wetter_bad_kreuzen_rain_today, name: Bad Kreuzen }
+              - { entity: sensor.wetter_pabneukirchen_rain_today, name: Pabneuk. }
+              - { entity: sensor.wetter_burgstall_rain_today, name: Burgstall }
+              - { entity: sensor.wetter_dimbach_rain_today, name: Dimbach }
+              - { entity: sensor.wetter_st_georgen_walde_rain_today, name: St. Georgen }
+              - { entity: sensor.wetter_waldhausen_rain_today, name: Waldhausen }
+              - { entity: sensor.wetter_ried_riedmark_rain_today, name: Ried }
+            grid_options:
+              columns: full
+          - type: glance
+            title: Windböen jetzt
+            columns: 5
+            entities:
+              - { entity: sensor.wetter_perg_thurnhof_wind_gusts, name: Perg }
+              - { entity: sensor.wetter_naarn_wind_gusts, name: Naarn }
+              - { entity: sensor.wetter_grein_wind_gusts, name: Grein }
+              - { entity: sensor.wetter_bad_kreuzen_wind_gusts, name: Bad Kreuzen }
+              - { entity: sensor.wetter_pabneukirchen_wind_gusts, name: Pabneuk. }
+              - { entity: sensor.wetter_burgstall_wind_gusts, name: Burgstall }
+              - { entity: sensor.wetter_dimbach_wind_gusts, name: Dimbach }
+              - { entity: sensor.wetter_st_georgen_walde_wind_gusts, name: St. Georgen }
+              - { entity: sensor.wetter_waldhausen_wind_gusts, name: Waldhausen }
+              - { entity: sensor.wetter_ried_riedmark_wind_gusts, name: Ried }
+            grid_options:
+              columns: full

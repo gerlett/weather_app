@@ -1,0 +1,88 @@
+# Home Assistant package: Thurnhof outdoor temperature on the Sonoff SNZB-02DR2 panels.
+# Installed as <ha-config>/packages/wetter_strudengau_displays.yaml.
+#
+# Remote source 2 of eg-kitchen-display and eg-livingroom-display shows the current
+# temperature and humidity of Perg/Thurnhof (sensor.wetter_perg_thurnhof_temperature/_humidity,
+# from wetter-bridge).
+# Remote source 1 stays with the existing automations (garden north-side sensor).
+#
+# Writing a value marks the source "online" on the panel (Zigbee2MQTT converter).
+# If the weather data is missing for more than an hour, source 2 is set "offline"
+# so the panel does not keep showing a stale outdoor temperature.
+
+automation:
+  - id: wetter_strudengau_thurnhof_displays_source2
+    alias: "EG Displays – Außentemperatur & -feuchte Thurnhof (Quelle 2)"
+    description: >-
+      Schreibt Temperatur und Luftfeuchte von Perg/Thurnhof als Remote-Quelle 2 auf
+      eg-kitchen-display und eg-livingroom-display (SONOFF SNZB-02DR2, Firmware 1.0.5).
+      Quelle 1 bleibt der Gartensensor Nordseite. Fehlen die Wetterdaten länger als
+      1 Stunde, wird Quelle 2 als offline markiert.
+    mode: queued
+    max: 3
+    triggers:
+      - trigger: state
+        entity_id:
+          - sensor.wetter_perg_thurnhof_temperature
+          - sensor.wetter_perg_thurnhof_humidity
+        id: update
+      # 30 s after the garden automation's /15 run, so both don't hit the panels at once
+      - trigger: time_pattern
+        minutes: "/15"
+        seconds: 30
+        id: update
+      - trigger: homeassistant
+        event: start
+        id: update
+      - trigger: state
+        entity_id:
+          - sensor.wetter_perg_thurnhof_temperature
+          - sensor.wetter_perg_thurnhof_humidity
+        to:
+          - unavailable
+          - unknown
+        for: "01:00:00"
+        id: lost
+    conditions: []
+    actions:
+      - if:
+          - condition: trigger
+            id: update
+        then:
+          # temperature – panel accepts -20 … 60 °C
+          - if:
+              - condition: template
+                value_template: "{{ states('sensor.wetter_perg_thurnhof_temperature') | is_number }}"
+            then:
+              - action: number.set_value
+                target:
+                  entity_id:
+                    - number.eg_kitchen_display_source_2_temperature
+                    - number.eg_livingroom_display_source_2_temperature
+                data:
+                  value: >-
+                    {{ ([([states('sensor.wetter_perg_thurnhof_temperature') | float, -20] | max), 60] | min) | round(1) }}
+          # humidity – panel accepts 0 … 99.9 %
+          - if:
+              - condition: template
+                value_template: "{{ states('sensor.wetter_perg_thurnhof_humidity') | is_number }}"
+            then:
+              - action: number.set_value
+                target:
+                  entity_id:
+                    - number.eg_kitchen_display_source_2_humidity
+                    - number.eg_livingroom_display_source_2_humidity
+                data:
+                  value: >-
+                    {{ ([([states('sensor.wetter_perg_thurnhof_humidity') | float, 0] | max), 99.9] | min) | round(1) }}
+        else:
+          # weather data missing for an hour → don't let the panels show stale values
+          - action: select.select_option
+            target:
+              entity_id:
+                - select.eg_kitchen_display_source_2_temperature_state
+                - select.eg_livingroom_display_source_2_temperature_state
+                - select.eg_kitchen_display_source_2_humidity_state
+                - select.eg_livingroom_display_source_2_humidity_state
+            data:
+              option: offline

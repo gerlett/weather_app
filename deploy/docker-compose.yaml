@@ -5,17 +5,16 @@
 # docker-compose.yaml yet). Afterwards the host copy is left alone — it may
 # carry hand-edits; push changes deliberately with `deploy-web.sh --update-stack`.
 #
-# The site is static (Next.js `output: "export"`): nginx serves ./html, which
-# every deploy replaces in place — no container restart needed.
-#
-# Secrets: .env beside this file (git-ignored), read by compose for ${VAR}
-# substitution only:
-#   CLOUDFLARED_TUNNEL_TOKEN   token of this site's own Cloudflare tunnel
-# Copy .env.example to .env and fill it in.
+# Secrets live in git-ignored env files beside this one, NOT committed:
+#   .env          compose-level only – ${VAR} substitution (the tunnel token)
+#   .env.bridge   wetter-bridge only (MQTT credentials)
+# One file per service, so a compromised container cannot read the other's secrets.
 #
 # No top-level `version:` — Compose v2 ignores it and warns on every command.
 
 services:
+  # Static site + caching proxy to Open-Meteo (/api/om/*) + bridge JSON (/api/ha/*).
+  # The site is a static Next.js export: every deploy replaces ./html in place.
   wetter-strudengau:
     image: nginx:stable-alpine
     container_name: wetter-strudengau
@@ -24,20 +23,38 @@ services:
     volumes:
       - ./html:/usr/share/nginx/html:ro
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./om-proxy.inc:/etc/nginx/om-proxy.inc:ro
+      - om-cache:/var/cache/nginx/om          # proxy cache survives container recreation
     restart: unless-stopped
+
+  # Home Assistant integration: MQTT discovery (devices + sensors per station) and
+  # /api/ha/<station>.json. Stateless, no database. Reaches Open-Meteo through the
+  # nginx cache above, and Mosquitto via the host's published port (see .env.bridge).
+  wetter-bridge:
+    build: ./bridge
+    image: wetter-bridge:local
+    container_name: wetter-bridge
+    env_file:
+      - path: ./.env.bridge
+        required: false                       # without it: JSON endpoints only, no MQTT
+    environment:
+      OM_BASE: http://wetter-strudengau/api/om
+    depends_on:
+      - wetter-strudengau
+    restart: unless-stopped
+    expose:
+      - "3000"
 
   # Cloudflare tunnel for the public hostname. Remotely-managed (token) tunnel:
   # the ingress rule lives in the Cloudflare dashboard, not in a local config.
   #
   # In the dashboard, point the tunnel's public hostname at
   #   http://wetter-strudengau:80      (compose network, survives a host-IP change)
-  # or alternatively http://192.168.178.95:8883.
   #
   # Use a hostname ONE label under your zone (e.g. wetter.<your-domain>):
   # Cloudflare's free Universal SSL covers only <zone> and *.<zone>.
   #
-  # Started only when .env holds a token — deploy-web.sh brings up just the
-  # web container otherwise (see the `tunnel` profile).
+  # Started only when .env holds a token (compose profile `tunnel`).
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: wetter-strudengau-cloudflared
@@ -46,3 +63,6 @@ services:
       - wetter-strudengau
     restart: unless-stopped
     profiles: ["tunnel"]
+
+volumes:
+  om-cache:
