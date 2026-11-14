@@ -1,0 +1,48 @@
+# Reference copy of the host's docker-compose.yaml for the weather website
+# (lives at /docker/apps/wetter-strudengau/ on 192.168.178.95).
+#
+# Installed by deploy-web.sh on the FIRST deploy only (when the host has no
+# docker-compose.yaml yet). Afterwards the host copy is left alone — it may
+# carry hand-edits; push changes deliberately with `deploy-web.sh --update-stack`.
+#
+# The site is static (Next.js `output: "export"`): nginx serves ./html, which
+# every deploy replaces in place — no container restart needed.
+#
+# Secrets: .env beside this file (git-ignored), read by compose for ${VAR}
+# substitution only:
+#   CLOUDFLARED_TUNNEL_TOKEN   token of this site's own Cloudflare tunnel
+# Copy .env.example to .env and fill it in.
+#
+# No top-level `version:` — Compose v2 ignores it and warns on every command.
+
+services:
+  wetter-strudengau:
+    image: nginx:stable-alpine
+    container_name: wetter-strudengau
+    ports:
+      - "8883:80"
+    volumes:
+      - ./html:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: unless-stopped
+
+  # Cloudflare tunnel for the public hostname. Remotely-managed (token) tunnel:
+  # the ingress rule lives in the Cloudflare dashboard, not in a local config.
+  #
+  # In the dashboard, point the tunnel's public hostname at
+  #   http://wetter-strudengau:80      (compose network, survives a host-IP change)
+  # or alternatively http://192.168.178.95:8883.
+  #
+  # Use a hostname ONE label under your zone (e.g. wetter.<your-domain>):
+  # Cloudflare's free Universal SSL covers only <zone> and *.<zone>.
+  #
+  # Started only when .env holds a token — deploy-web.sh brings up just the
+  # web container otherwise (see the `tunnel` profile).
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: wetter-strudengau-cloudflared
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARED_TUNNEL_TOKEN:-missing}
+    depends_on:
+      - wetter-strudengau
+    restart: unless-stopped
+    profiles: ["tunnel"]
