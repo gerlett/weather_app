@@ -15,6 +15,13 @@ export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? "";
 /** Short commit hash, e.g. `a1b2c3d` (`-dirty` for uncommitted changes); may be empty. */
 export const GIT_HASH = process.env.NEXT_PUBLIC_GIT_HASH ?? "";
 
+/**
+ * Unique id of this deploy (version, commit, build time) – the same value as
+ * `buildId` in the server's /version.json, which is how an open tab notices a
+ * newer deploy (UpdateWatcher). Empty for development builds.
+ */
+export const BUILD_ID = process.env.NEXT_PUBLIC_BUILD_ID ?? "";
+
 /** `0.1.4 (a1b2c3d)`, or `null` for a development build. */
 export function displayVersion(version = APP_VERSION, hash = GIT_HASH): string | null {
   if (!version) return null;

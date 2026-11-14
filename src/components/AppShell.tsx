@@ -7,6 +7,7 @@ import { displayVersion } from "@/lib/version";
 import { Imprint } from "./Imprint";
 import { LocationBar } from "./LocationBar";
 import { RateLimitBanner } from "./RateLimitBanner";
+import { UpdateWatcher } from "./UpdateWatcher";
 import { WhatsNew } from "./WhatsNew";
 
 type Loc = ReturnType<typeof useLocations>;
@@ -35,6 +36,7 @@ export function AppShell({
       />
       <main className="mx-auto max-w-7xl space-y-14 px-4 py-6 sm:px-6 sm:py-10">{children(loc.selected, loc)}</main>
       <RateLimitBanner />
+      <UpdateWatcher />
       {whatsNew && <WhatsNew />}
       <footer className="mt-10 border-t border-white/10 bg-slate-950/60">
         <div className="mx-auto max-w-7xl space-y-1 px-4 py-8 text-xs text-slate-400 sm:px-6">

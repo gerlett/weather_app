@@ -98,6 +98,18 @@ footer shows, then `./deploy-changelog.sh` (no rebuild). The site lists all rele
 on `/aenderungen`, and on opening the site a "Neu auf der Website" dialog shows once what is new – a first visit gets the newest release only
 – never releases newer than the running build. Details: `deploy/changelog/README.md`.
 
+### Browser cache after a deploy
+
+- **HTML, `/version.json`, `/changelog/`** are sent with `Cache-Control: no-cache` – every load revalidates
+  (cheap 304), so a fresh page load is always the current build. Cloudflare does not cache them (`DYNAMIC`).
+- **`/_next/static/`** is content-hashed and `immutable`; a deploy keeps the previous build's files for
+  14 days (`deploy/remote-install.sh`), so a tab still running an old build never hits a missing chunk.
+- **Open tabs** (`UpdateWatcher`): every 5 min and when the tab comes back into view, the page compares
+  its built-in build id with `/version.json`. A background tab reloads silently, a visible one shows
+  "Neu laden". A chunk that fails to load anyway triggers one reload.
+- **Cached weather data** (`om1:*` in localStorage) is dropped the first time a browser runs a new build;
+  settings (location, favorites, changelog seen) stay.
+
 ## Server-side API proxy & Home Assistant
 
 ```

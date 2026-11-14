@@ -53,8 +53,18 @@ sync_bridge() {
 # --- 1. replace the site in place ---------------------------------------------
 # Contents are swapped, not the directory: the container bind-mounts html/ by
 # inode, so a renamed/new directory would keep serving the old build.
+#
+# Everything is replaced except the content-hashed files in _next/static/: a tab
+# still running the previous build may load one of its chunks later (e.g. when
+# navigating), so old ones are kept for 14 days. Same name = same content, so
+# keeping them never serves anything stale.
 mkdir -p html changelog   # changelog/: deploy-changelog.sh, never touched here
-find html -mindepth 1 -delete
+find html -mindepth 1 -maxdepth 1 ! -name _next -exec rm -rf {} +
+if [ -d html/_next ]; then
+  find html/_next -mindepth 1 -maxdepth 1 ! -name static -exec rm -rf {} +
+  find html/_next/static -type f -mtime +14 -delete 2>/dev/null || true
+  find html/_next/static -mindepth 1 -type d -empty -delete 2>/dev/null || true
+fi
 cp -a "$IN/html/." html/
 echo "Site updated ($(cat html/version.json 2>/dev/null || echo 'no version.json'))."
 
