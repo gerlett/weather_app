@@ -4,8 +4,8 @@
       "version": "0.1.1",
       "date": "2026-11-14",
       "items": [
-        { "de": "Versionsnummer im Fußbereich der Seite und neue Seite „Änderungen“ mit allen Neuerungen und einer Suche." },
-        { "de": "Nach einem Update zeigt die Website wiederkehrenden Besuchern einmal kurz, was neu ist." }
+        { "de": "Beim Öffnen der Website zeigt ein Fenster „Neu auf der Website“ einmal, was sich seit dem letzten Besuch geändert hat." },
+        { "de": "Versionsnummer im Fußbereich der Seite und neue Seite „Änderungen“ mit allen Neuerungen und einer Suche." }
       ]
     },
     {

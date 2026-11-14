@@ -2,7 +2,7 @@
 
 `changelog.json` here is the website's changelog. The site shows it on
 `/aenderungen` (every release, with a search) and, once after an update, in a
-small "Neu auf der Website" card – see `src/lib/changelog.ts`. Same scheme as
+"Neu auf der Website" dialog when the site opens – see `src/lib/changelog.ts`. Same scheme as
 `../fotografie_crm/deploy/changelog/`.
 
 It is **never part of the build**: nginx serves it from a directory beside

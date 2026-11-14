@@ -17,7 +17,7 @@ export function AppShell({
   whatsNew = true,
 }: {
   children: (selected: WeatherLocation, loc: Loc) => ReactNode;
-  /** the "Neu auf der Website" card – off on the Änderungen page itself */
+  /** the "Neu auf der Website" dialog – off on the Änderungen page itself */
   whatsNew?: boolean;
 }) {
   const loc = useLocations();

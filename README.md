@@ -95,8 +95,8 @@ node scripts/app-version.ts --start 0.2   # next commit becomes 0.2.0 (commit ve
 The changelog lives in `deploy/changelog/changelog.json`, **outside the build**: nginx serves it at
 `/changelog/` from a directory beside `html/`. Write an entry after a deploy, using the version the
 footer shows, then `./deploy-changelog.sh` (no rebuild). The site lists all releases with a search
-on `/aenderungen`, and returning visitors see a "Neu auf der Website" card once per new release
-(never for releases newer than the running build). Details: `deploy/changelog/README.md`.
+on `/aenderungen`, and on opening the site a "Neu auf der Website" dialog shows once what is new – a first visit gets the newest release only
+– never releases newer than the running build. Details: `deploy/changelog/README.md`.
 
 ## Server-side API proxy & Home Assistant
 
