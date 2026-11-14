@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Sparkles, X } from "lucide-react";
-import { type ChangelogEntry, fetchChangelog, shippedEntries, unseenEntries } from "@/lib/changelog";
+import { type ChangelogEntry, fetchChangelog, unseenEntries } from "@/lib/changelog";
 import { ChangelogEntries } from "./ChangelogEntries";
 
 const KEY_SEEN = "wetter-perg:changelog-seen"; // newest version this browser has shown
@@ -19,67 +19,75 @@ export function markChangelogSeen(version: string) {
   try {
     localStorage.setItem(KEY_SEEN, version);
   } catch {
-    /* private mode – the card simply shows again next time */
+    /* private mode – the dialog simply shows again next time */
   }
 }
 
 /**
- * "Neu auf der Website": after an update, shows once what changed since this
- * browser last looked – never more than the running build has. A first-time
- * visitor gets nothing (the newest release is just marked as seen): on a public
- * site, release notes are news only to returning visitors.
+ * "Neu auf der Website" – the same first-load dialog as in fotografie_crm:
+ * when the page opens, it shows once what changed since this browser last
+ * looked, never newer than the running build. A browser that has never seen
+ * the changelog gets only the newest release, not the whole history.
+ * Closing it (button, Esc, click beside it) marks what it showed as seen.
  * A changelog that cannot be read shows nothing and marks nothing.
  */
 export function WhatsNew() {
   const [entries, setEntries] = useState<ChangelogEntry[]>([]);
+  const dialog = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
     const ctrl = new AbortController();
     fetchChangelog(ctrl.signal)
-      .then((all) => {
-        const seen = readSeen();
-        if (!seen) {
-          const newest = shippedEntries(all)[0];
-          if (newest) markChangelogSeen(newest.version);
-          return;
-        }
-        setEntries(unseenEntries(all, seen));
-      })
+      .then((all) => setEntries(unseenEntries(all, readSeen())))
       .catch(() => {});
     return () => ctrl.abort();
   }, []);
 
+  useEffect(() => {
+    const d = dialog.current;
+    if (entries.length && d && !d.open) d.showModal();
+  }, [entries]);
+
   if (!entries.length) return null;
-  const close = () => {
+
+  // Every way of closing ends in the dialog's `close` event.
+  const onClose = () => {
     markChangelogSeen(entries[0].version);
     setEntries([]);
   };
+  const close = () => dialog.current?.close();
 
   return (
-    <aside
-      role="dialog"
+    <dialog
+      ref={dialog}
+      onClose={onClose}
+      onClick={(e) => e.target === e.currentTarget && close()} // click on the backdrop
       aria-labelledby="whats-new-title"
-      className="fixed inset-x-4 bottom-4 z-40 flex max-h-[70vh] flex-col rounded-2xl bg-slate-900/95 shadow-2xl ring-1 ring-white/15 backdrop-blur sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-96"
+      className="m-auto max-h-[80vh] w-[min(36rem,calc(100vw-2rem))] overflow-hidden rounded-2xl bg-slate-900 p-0 text-slate-200 shadow-2xl ring-1 ring-white/15 backdrop:bg-slate-950/70 backdrop:backdrop-blur-sm open:flex open:flex-col"
     >
-      <div className="flex items-center justify-between gap-3 border-b border-white/10 px-5 py-3">
-        <h2 id="whats-new-title" className="flex items-center gap-2 font-semibold text-white">
-          <Sparkles className="h-4 w-4 text-amber-300" aria-hidden /> Neu auf der Website
+      <div className="flex items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
+        <h2 id="whats-new-title" className="flex items-center gap-2 text-lg font-semibold text-white">
+          <Sparkles className="h-5 w-5 text-amber-300" aria-hidden /> Neu auf der Website
         </h2>
         <button onClick={close} className="rounded-lg p-1 text-slate-400 hover:bg-white/10 hover:text-white" aria-label="Schließen">
-          <X className="h-4 w-4" />
+          <X className="h-5 w-5" />
         </button>
       </div>
-      <div className="min-h-0 overflow-y-auto px-5 py-4">
+      <div className="min-h-0 overflow-y-auto px-5 py-5">
         <ChangelogEntries entries={entries} compact />
       </div>
       <div className="flex items-center justify-between gap-3 border-t border-white/10 px-5 py-3 text-sm">
-        <a href="/aenderungen" onClick={close} className="text-sky-300 hover:text-sky-200">
+        <a href="/aenderungen" onClick={() => markChangelogSeen(entries[0].version)} className="text-sky-300 hover:text-sky-200">
           Alle Änderungen
         </a>
-        <button onClick={close} className="rounded-lg bg-sky-500/20 px-3 py-1.5 font-medium text-sky-100 ring-1 ring-sky-400/40 hover:bg-sky-500/30">
+        <button
+          onClick={close}
+          autoFocus
+          className="rounded-lg bg-sky-500/20 px-4 py-1.5 font-medium text-sky-100 ring-1 ring-sky-400/40 hover:bg-sky-500/30"
+        >
           Verstanden
         </button>
       </div>
-    </aside>
+    </dialog>
   );
 }

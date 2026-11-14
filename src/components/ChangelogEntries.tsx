@@ -1,7 +1,7 @@
 import type { ChangelogEntry } from "@/lib/changelog";
 import { formatChangelogDate } from "@/lib/changelog";
 
-/** One release per block: version, date, its lines. Shared by the "Neu" card and the Änderungen page. */
+/** One release per block: version, date, its lines. Shared by the "Neu" dialog and the Änderungen page. */
 export function ChangelogEntries({ entries, compact = false }: { entries: ChangelogEntry[]; compact?: boolean }) {
   return (
     <ol className={compact ? "space-y-4" : "space-y-8"}>

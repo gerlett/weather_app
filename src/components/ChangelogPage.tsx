@@ -20,7 +20,7 @@ export function ChangelogPage() {
     fetchChangelog(ctrl.signal)
       .then((all) => {
         const shipped = shippedEntries(all);
-        if (shipped[0]) markChangelogSeen(shipped[0].version); // read here → no "Neu" card for it
+        if (shipped[0]) markChangelogSeen(shipped[0].version); // read here → no "Neu" dialog for it
         setEntries(shipped);
       })
       .catch((e: unknown) => {
