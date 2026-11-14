@@ -1,6 +1,14 @@
 {
   "entries": [
     {
+      "version": "0.1.3",
+      "date": "2026-11-14",
+      "items": [
+        { "de": "Nach einem Update lädt die Website die neue Version von selbst: offene Tabs im Hintergrund werden automatisch aktualisiert, sonst erscheint ein Hinweis „Neu laden“." },
+        { "de": "Zwischengespeicherte Wetterdaten im Browser werden bei einer neuen Version verworfen und frisch geladen; Standort und Favoriten bleiben erhalten." }
+      ]
+    },
+    {
       "version": "0.1.1",
       "date": "2026-11-14",
       "items": [

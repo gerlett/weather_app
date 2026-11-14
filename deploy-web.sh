@@ -128,9 +128,20 @@ if [ "$SKIP_BUILD" -eq 0 ]; then
   # Git Bash from rewriting the leading-slash value into a Windows path.
   # Version + commit are built in and shown in the footer (src/lib/version.ts).
   MSYS_NO_PATHCONV=1 MSYS2_ENV_CONV_EXCL="NEXT_PUBLIC_OM_PROXY" NEXT_PUBLIC_OM_PROXY=/api/om \
-    NEXT_PUBLIC_APP_VERSION="$VERSION" NEXT_PUBLIC_GIT_HASH="$GIT_HASH$DIRTY" npm run build
+    NEXT_PUBLIC_APP_VERSION="$VERSION" NEXT_PUBLIC_GIT_HASH="$GIT_HASH$DIRTY" NEXT_PUBLIC_BUILD_ID="$BUILD_ID" npm run build
+  # what this out/ was built as – reused by --skip-build (not shipped)
+  printf 'VERSION=%q
+GIT_HASH=%q
+DIRTY=%q
+BUILD_ID=%q
+' "$VERSION" "$GIT_HASH" "$DIRTY" "$BUILD_ID" > out/.build-meta
 fi
 [ -f out/index.html ] || { echo "out/index.html not found – build first (without --skip-build)." >&2; exit 1; }
+if [ "$SKIP_BUILD" -eq 1 ]; then
+  [ -f out/.build-meta ] || { echo "out/ has no .build-meta (built by hand?) – rebuild without --skip-build." >&2; exit 1; }
+  # shellcheck disable=SC1091
+  . out/.build-meta
+fi
 [ -f out/auswertung.html ] || { echo "out/auswertung.html missing – incomplete build?" >&2; exit 1; }
 # The build must talk to the server's proxy, not to Open-Meteo directly (and the
 # value must not have been mangled into a Windows path by Git Bash).
@@ -138,8 +149,10 @@ grep -rqs '"/api/om"' out/_next/static || grep -rqs '/api/om/forecast' out/_next
   echo "Build does not use the /api/om proxy – rebuild without --skip-build." >&2
   exit 1
 }
-grep -rqsF "\"$VERSION\"" out/_next/static || {
-  echo "Build does not carry version $VERSION – rebuild without --skip-build." >&2
+# Open tabs compare this id with /version.json to notice the deploy (UpdateWatcher), so a
+# stale out/ must not be shipped under a new id.
+grep -rqsF "\"$BUILD_ID\"" out/_next/static || {
+  echo "Build does not carry build id $BUILD_ID – rebuild without --skip-build." >&2
   exit 1
 }
 
@@ -147,6 +160,7 @@ grep -rqsF "\"$VERSION\"" out/_next/static || {
 STAGE="$(mktemp -d)"
 mkdir -p "$STAGE/html" "$STAGE/.stack"
 cp -a out/. "$STAGE/html/"
+rm -f "$STAGE/html/.build-meta"
 printf '{"version":"%s","commit":"%s%s","buildId":"%s"}\n' "$VERSION" "$GIT_HASH" "$DIRTY" "$BUILD_ID" > "$STAGE/html/version.json"
 cp "$STACK/docker-compose.yaml" "$STACK/nginx.conf" "$STACK/om-proxy.inc" "$STACK/remote-install.sh" "$STAGE/.stack/"
 if [ "$HAS_ENV" -eq 1 ]; then cp "$STACK/.env" "$STAGE/.stack/.env"; fi

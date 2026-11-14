@@ -6,6 +6,7 @@
  * No database: everything is fetched on demand and cached in memory for the session.
  */
 import type { WeatherLocation } from "./locations";
+import { BUILD_ID } from "./version";
 
 /**
  * API base. Deployed builds go through the server's caching proxy (same origin,
@@ -50,6 +51,28 @@ function isImmutable(url: string) {
   const end = /end_date=(\d{4}-\d{2}-\d{2})/.exec(url)?.[1];
   return !!end && end < isoDate(addDays(new Date(), -IMMUTABLE_AFTER_DAYS));
 }
+
+/**
+ * A new deploy may change how data is requested or processed: the first time a
+ * browser runs a new build, the weather data it cached under an older build is
+ * dropped (settings – location, favorites, changelog – stay). The archive data
+ * comes back from the server's proxy cache, so this costs no API calls.
+ */
+const LS_BUILD = "wetter-perg:build";
+function dropCacheOfOldBuild() {
+  if (!BUILD_ID) return;
+  try {
+    if (localStorage.getItem(LS_BUILD) === BUILD_ID) return;
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith(LS_PREFIX))
+      .forEach((k) => localStorage.removeItem(k));
+    localStorage.setItem(LS_BUILD, BUILD_ID);
+  } catch {
+    /* storage unavailable – nothing cached either */
+  }
+}
+// in the browser: right when the code of a (new) build first loads
+if (typeof window !== "undefined") dropCacheOfOldBuild();
 
 function lsGet<T>(url: string): T | undefined {
   try {
