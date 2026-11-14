@@ -1,6 +1,14 @@
 {
   "entries": [
     {
+      "version": "0.1.1",
+      "date": "2026-11-14",
+      "items": [
+        { "de": "Versionsnummer im Fußbereich der Seite und neue Seite „Änderungen“ mit allen Neuerungen und einer Suche." },
+        { "de": "Nach einem Update zeigt die Website wiederkehrenden Besuchern einmal kurz, was neu ist." }
+      ]
+    },
+    {
       "version": "0.1.0",
       "date": "2026-11-14",
       "items": [
