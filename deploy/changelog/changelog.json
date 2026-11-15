@@ -1,6 +1,13 @@
 {
   "entries": [
     {
+      "version": "0.1.13",
+      "date": "2026-11-15",
+      "items": [
+        { "de": "„Live“ steht jetzt rechtsbündig in derselben Zeile wie Sonnenaufgang und -untergang.", "en": "“Live” now sits right-aligned on the same line as sunrise and sunset." }
+      ]
+    },
+    {
       "version": "0.1.12",
       "date": "2026-11-15",
       "items": [

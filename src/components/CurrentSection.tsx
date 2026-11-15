@@ -179,15 +179,17 @@ export function CurrentSection({ location, data, loading, live }: { location: We
           {t("Gefühlt", "Feels like")} {fmt(c.apparent_temperature)} °C · Max {fmt(daily.temperature_2m_max[di])}° / Min {fmt(daily.temperature_2m_min[di])}°
         </p>
 
-        <div className="mt-6 flex flex-wrap gap-x-5 gap-y-1 text-sm text-white/80">
-          {daily.sunrise[di] && (
-            <span className="inline-flex items-center gap-1.5"><Sunrise className="h-4 w-4" /> {time(daily.sunrise[di]!)}</span>
-          )}
-          {daily.sunset[di] && (
-            <span className="inline-flex items-center gap-1.5"><Sunset className="h-4 w-4" /> {time(daily.sunset[di]!)}</span>
-          )}
-        </div>
         <LiveStatus
+          leading={
+            <>
+              {daily.sunrise[di] && (
+                <span className="inline-flex items-center gap-1.5"><Sunrise className="h-4 w-4" /> {time(daily.sunrise[di]!)}</span>
+              )}
+              {daily.sunset[di] && (
+                <span className="inline-flex items-center gap-1.5"><Sunset className="h-4 w-4" /> {time(daily.sunset[di]!)}</span>
+              )}
+            </>
+          }
           lastCheck={live.lastCheck}
           checking={live.checking}
           valueTime={c.time}
