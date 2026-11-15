@@ -28,7 +28,7 @@ export function markChangelogSeen(version: string) {
  * when the page opens, it shows once what changed since this browser last
  * looked, never newer than the running build. A browser that has never seen
  * the changelog gets only the newest release, not the whole history.
- * Closing it (button, Esc, click beside it) marks what it showed as seen.
+ * What it shows counts as seen as soon as it opens, so a reload never brings it back.
  * A changelog that cannot be read shows nothing and marks nothing.
  */
 export function WhatsNew() {
@@ -45,7 +45,11 @@ export function WhatsNew() {
 
   useEffect(() => {
     const d = dialog.current;
-    if (entries.length && d && !d.open) d.showModal();
+    if (entries.length && d && !d.open) {
+      d.showModal();
+      // Counted as seen once shown: a reload while it is open must not bring it back.
+      markChangelogSeen(entries[0].version);
+    }
   }, [entries]);
 
   if (!entries.length) return null;

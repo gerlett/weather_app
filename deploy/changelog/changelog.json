@@ -1,6 +1,14 @@
 {
   "entries": [
     {
+      "version": "0.1.8",
+      "date": "2026-11-15",
+      "items": [
+        { "de": "Ganz oben auf der Seite nach unten wischen lädt die gesamte Seite neu – auch in der installierten App." },
+        { "de": "Das Fenster „Neu auf der Website“ und das Impressum sind nach dem Neuladen immer geschlossen." }
+      ]
+    },
+    {
       "version": "0.1.7",
       "date": "2026-11-15",
       "items": [

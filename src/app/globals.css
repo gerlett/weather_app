@@ -7,6 +7,12 @@
 html {
   scroll-behavior: smooth;
   color-scheme: dark;
+  /* the site's own pull-to-refresh (PullToRefresh.tsx) replaces the browser's */
+  overscroll-behavior-y: none;
+}
+
+body {
+  overscroll-behavior-y: none;
 }
 
 body {

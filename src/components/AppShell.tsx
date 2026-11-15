@@ -6,6 +6,7 @@ import type { WeatherLocation } from "@/lib/locations";
 import { displayVersion } from "@/lib/version";
 import { Imprint } from "./Imprint";
 import { LocationBar } from "./LocationBar";
+import { PullToRefresh } from "./PullToRefresh";
 import { RateLimitBanner } from "./RateLimitBanner";
 import { UpdateWatcher } from "./UpdateWatcher";
 import { WhatsNew } from "./WhatsNew";
@@ -25,6 +26,7 @@ export function AppShell({
   const version = displayVersion();
   return (
     <div id="top" className="min-h-screen">
+      <PullToRefresh />
       <LocationBar
         selected={loc.selected}
         favorites={loc.favorites}
