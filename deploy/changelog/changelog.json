@@ -1,64 +1,71 @@
 {
   "entries": [
     {
+      "version": "0.1.11",
+      "date": "2026-11-15",
+      "items": [
+        { "de": "Die Website gibt es jetzt auf Deutsch und Englisch: Die Sprache richtet sich nach der Systemsprache (Deutsch → Deutsch, sonst Englisch) und lässt sich oben in der Kopfzeile mit DE / EN umstellen; die Wahl merkt sich der Browser.", "en": "The website is now available in German and English: the language follows your system language (German → German, otherwise English) and can be switched with DE / EN in the top bar; your browser remembers the choice." }
+      ]
+    },
+    {
       "version": "0.1.9",
       "date": "2026-11-15",
       "items": [
-        { "de": "Eingeklappte Bereiche bleiben eingeklappt, auch wenn man zu einem anderen Ort wechselt (z. B. „Wetterstation …“ nach einem Ort ohne Station)." }
+        { "de": "Eingeklappte Bereiche bleiben eingeklappt, auch wenn man zu einem anderen Ort wechselt (z. B. „Wetterstation …“ nach einem Ort ohne Station).", "en": "Collapsed sections stay collapsed when you switch to another location (e.g. “Weather station …” after a place without a station)." }
       ]
     },
     {
       "version": "0.1.8",
       "date": "2026-11-15",
       "items": [
-        { "de": "Ganz oben auf der Seite nach unten wischen lädt die gesamte Seite neu – auch in der installierten App." },
-        { "de": "Das Fenster „Neu auf der Website“ und das Impressum sind nach dem Neuladen immer geschlossen." }
+        { "de": "Ganz oben auf der Seite nach unten wischen lädt die gesamte Seite neu – auch in der installierten App.", "en": "Swiping down at the very top of the page reloads the whole page – also in the installed app." },
+        { "de": "Das Fenster „Neu auf der Website“ und das Impressum sind nach dem Neuladen immer geschlossen.", "en": "The “New on the website” window and the legal notice are always closed after a reload." }
       ]
     },
     {
       "version": "0.1.7",
       "date": "2026-11-15",
       "items": [
-        { "de": "Beim Öffnen der Website werden die aktuellen Werte sofort frisch geladen – auch UV-Index – und beim Zurückkehren in den Tab gleich aktualisiert." },
-        { "de": "Ein Klick auf Temperatur, Wind, Niederschlag, Luftdruck oder Luftfeuchte zeigt unter der großen Wetterkarte den Verlauf dieses Werts (24 Stunden, 7 oder 30 Tage)." },
-        { "de": "Gesuchte Orte bleiben unter „Zuletzt gesucht“ in der Ortsauswahl, lassen sich als Favorit markieren und – wie Favoriten – mit ✕ aus der Liste entfernen." },
-        { "de": "Der Bereich „Über die Station“ erscheint nur noch bei Orten mit erreichbarer Messstation." },
-        { "de": "Impressum ist nach dem Neuladen der Seite wieder eingeklappt." }
+        { "de": "Beim Öffnen der Website werden die aktuellen Werte sofort frisch geladen – auch UV-Index – und beim Zurückkehren in den Tab gleich aktualisiert.", "en": "When the website opens, the current values – including the UV index – are loaded fresh right away, and updated as soon as you return to the tab." },
+        { "de": "Ein Klick auf Temperatur, Wind, Niederschlag, Luftdruck oder Luftfeuchte zeigt unter der großen Wetterkarte den Verlauf dieses Werts (24 Stunden, 7 oder 30 Tage).", "en": "Clicking temperature, wind, precipitation, pressure or humidity shows that value's history below the large weather card (24 hours, 7 or 30 days)." },
+        { "de": "Gesuchte Orte bleiben unter „Zuletzt gesucht“ in der Ortsauswahl, lassen sich als Favorit markieren und – wie Favoriten – mit ✕ aus der Liste entfernen.", "en": "Searched places stay under “Recently searched” in the location picker, can be marked as favourites and – like favourites – removed from the list with ✕." },
+        { "de": "Der Bereich „Über die Station“ erscheint nur noch bei Orten mit erreichbarer Messstation.", "en": "The “About the station” section only appears for places with a reachable measuring station." },
+        { "de": "Impressum ist nach dem Neuladen der Seite wieder eingeklappt.", "en": "The legal notice is collapsed again after reloading the page." }
       ]
     },
     {
       "version": "0.1.5",
       "date": "2026-11-15",
       "items": [
-        { "de": "Die Bereiche Vorhersage, Verlauf & Statistik, Zeitraum-Auswertung, Klimakalender und Stationsinfo lassen sich per Klick auf die Überschrift ein- und ausklappen. Die Vorhersage ist anfangs offen, die übrigen Bereiche sind eingeklappt; Ihre Auswahl merkt sich der Browser." },
-        { "de": "Neuer Link „Impressum“ im Fußbereich öffnet Impressum und Datenschutz direkt." }
+        { "de": "Die Bereiche Vorhersage, Verlauf & Statistik, Zeitraum-Auswertung, Klimakalender und Stationsinfo lassen sich per Klick auf die Überschrift ein- und ausklappen. Die Vorhersage ist anfangs offen, die übrigen Bereiche sind eingeklappt; Ihre Auswahl merkt sich der Browser.", "en": "The sections Forecast, History & statistics, Period analysis, Climate calendar and Station info can be collapsed and expanded by clicking their heading. The forecast starts open, the other sections collapsed; your browser remembers your choice." },
+        { "de": "Neuer Link „Impressum“ im Fußbereich öffnet Impressum und Datenschutz direkt.", "en": "New “Legal notice” link in the footer opens the legal notice and privacy information directly." }
       ]
     },
     {
       "version": "0.1.3",
       "date": "2026-11-14",
       "items": [
-        { "de": "Nach einem Update lädt die Website die neue Version von selbst: offene Tabs im Hintergrund werden automatisch aktualisiert, sonst erscheint ein Hinweis „Neu laden“." },
-        { "de": "Zwischengespeicherte Wetterdaten im Browser werden bei einer neuen Version verworfen und frisch geladen; Standort und Favoriten bleiben erhalten." }
+        { "de": "Nach einem Update lädt die Website die neue Version von selbst: offene Tabs im Hintergrund werden automatisch aktualisiert, sonst erscheint ein Hinweis „Neu laden“.", "en": "After an update the website loads the new version by itself: open tabs in the background are refreshed automatically, otherwise a “Reload” notice appears." },
+        { "de": "Zwischengespeicherte Wetterdaten im Browser werden bei einer neuen Version verworfen und frisch geladen; Standort und Favoriten bleiben erhalten.", "en": "Weather data cached in the browser is discarded and loaded fresh with a new version; location and favourites are kept." }
       ]
     },
     {
       "version": "0.1.1",
       "date": "2026-11-14",
       "items": [
-        { "de": "Beim Öffnen der Website zeigt ein Fenster „Neu auf der Website“ einmal, was sich seit dem letzten Besuch geändert hat." },
-        { "de": "Versionsnummer im Fußbereich der Seite und neue Seite „Änderungen“ mit allen Neuerungen und einer Suche." }
+        { "de": "Beim Öffnen der Website zeigt ein Fenster „Neu auf der Website“ einmal, was sich seit dem letzten Besuch geändert hat.", "en": "When the website opens, a “New on the website” window shows once what has changed since your last visit." },
+        { "de": "Versionsnummer im Fußbereich der Seite und neue Seite „Änderungen“ mit allen Neuerungen und einer Suche.", "en": "Version number in the footer and a new “Changes” page with all updates and a search." }
       ]
     },
     {
       "version": "0.1.0",
       "date": "2026-11-14",
       "items": [
-        { "de": "Neue Website für die Wetterstation Perg/Thurnhof und den Strudengau: aktuelle Werte, Vorhersage, Verlauf, Windrose, Klima und das AWEKAS-Stationswidget auf einer Seite." },
-        { "de": "Beim Start wird – mit Ihrer Erlaubnis – die nächstgelegene Station gewählt; weitere Orte lassen sich suchen und als Favoriten merken." },
-        { "de": "Zeitraum-Auswertung: alle Messwerte für frei wählbare Zeiträume zurück bis 1940, mit Summen bzw. Minimum, Maximum und Mittelwert je Stunde, Tag, Woche, Monat oder Jahr – auch als CSV." },
-        { "de": "Die wichtigsten Werte aktualisieren sich jede Minute von selbst, Änderungen werden kurz hervorgehoben." },
-        { "de": "Erreichbar unter https://wetter.softwarekstatt.at; Impressum und Datenschutz im einklappbaren Bereich ganz unten." }
+        { "de": "Neue Website für die Wetterstation Perg/Thurnhof und den Strudengau: aktuelle Werte, Vorhersage, Verlauf, Windrose, Klima und das AWEKAS-Stationswidget auf einer Seite.", "en": "New website for the Perg/Thurnhof weather station and the Strudengau: current values, forecast, history, wind rose, climate and the AWEKAS station widget on one page." },
+        { "de": "Beim Start wird – mit Ihrer Erlaubnis – die nächstgelegene Station gewählt; weitere Orte lassen sich suchen und als Favoriten merken.", "en": "On start – with your permission – the nearest station is selected; other places can be searched and saved as favourites." },
+        { "de": "Zeitraum-Auswertung: alle Messwerte für frei wählbare Zeiträume zurück bis 1940, mit Summen bzw. Minimum, Maximum und Mittelwert je Stunde, Tag, Woche, Monat oder Jahr – auch als CSV.", "en": "Period analysis: all measurements for any period back to 1940, with totals or minimum, maximum and mean per hour, day, week, month or year – also as CSV." },
+        { "de": "Die wichtigsten Werte aktualisieren sich jede Minute von selbst, Änderungen werden kurz hervorgehoben.", "en": "The key values update by themselves every minute, changes are briefly highlighted." },
+        { "de": "Erreichbar unter https://wetter.softwarekstatt.at; Impressum und Datenschutz im einklappbaren Bereich ganz unten.", "en": "Available at https://wetter.softwarekstatt.at; legal notice and privacy in the collapsible area at the very bottom." }
       ]
     }
   ]

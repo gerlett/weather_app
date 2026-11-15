@@ -7,6 +7,7 @@
  */
 import type { WeatherLocation } from "./locations";
 import { BUILD_ID } from "./version";
+import { getLang, tr } from "./i18n";
 
 /**
  * API base. Deployed builds go through the server's caching proxy (same origin,
@@ -114,7 +115,7 @@ async function fetchWithRetry<T>(url: string): Promise<T> {
     if (r.status === 429 && attempt < 4) {
       const hourly = /hourly/i.test(body?.reason ?? "");
       const daily = /daily/i.test(body?.reason ?? "");
-      if (daily) throw new Error("Tageslimit der Wetterdaten-Schnittstelle erreicht – bitte morgen erneut versuchen.");
+      if (daily) throw new Error(tr("Tageslimit der Wetterdaten-Schnittstelle erreicht – bitte morgen erneut versuchen.", "Daily limit of the weather data service reached – please try again tomorrow."));
       setLimited(Date.now() + (hourly ? 10 * 60_000 : 61_000));
       continue;
     }
@@ -492,7 +493,7 @@ type GeoResult = {
 export async function searchPlaces(query: string): Promise<WeatherLocation[]> {
   if (query.trim().length < 2) return [];
   const res = await getJson<{ results?: GeoResult[] }>(
-    `${GEOCODING}?` + qs({ name: query.trim(), count: 8, language: "de", format: "json" }),
+    `${GEOCODING}?` + qs({ name: query.trim(), count: 8, language: getLang(), format: "json" }),
   );
   return (res.results ?? []).map((r) => ({
     id: `geo-${r.id}`,

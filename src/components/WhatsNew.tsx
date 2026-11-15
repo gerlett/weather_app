@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Sparkles, X } from "lucide-react";
 import { type ChangelogEntry, fetchChangelog, unseenEntries } from "@/lib/changelog";
 import { ChangelogEntries } from "./ChangelogEntries";
+import { useLang } from "@/lib/i18n";
 
 const KEY_SEEN = "wetter-perg:changelog-seen"; // newest version this browser has shown
 
@@ -32,6 +33,7 @@ export function markChangelogSeen(version: string) {
  * A changelog that cannot be read shows nothing and marks nothing.
  */
 export function WhatsNew() {
+  const { t } = useLang();
   const [entries, setEntries] = useState<ChangelogEntry[]>([]);
   const dialog = useRef<HTMLDialogElement>(null);
 
@@ -71,9 +73,9 @@ export function WhatsNew() {
     >
       <div className="flex items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
         <h2 id="whats-new-title" className="flex items-center gap-2 text-lg font-semibold text-white">
-          <Sparkles className="h-5 w-5 text-amber-300" aria-hidden /> Neu auf der Website
+          <Sparkles className="h-5 w-5 text-amber-300" aria-hidden /> {t("Neu auf der Website", "New on the website")}
         </h2>
-        <button onClick={close} className="rounded-lg p-1 text-slate-400 hover:bg-white/10 hover:text-white" aria-label="Schließen">
+        <button onClick={close} className="rounded-lg p-1 text-slate-400 hover:bg-white/10 hover:text-white" aria-label={t("Schließen", "Close")}>
           <X className="h-5 w-5" />
         </button>
       </div>
@@ -82,14 +84,14 @@ export function WhatsNew() {
       </div>
       <div className="flex items-center justify-between gap-3 border-t border-white/10 px-5 py-3 text-sm">
         <a href="/aenderungen" onClick={() => markChangelogSeen(entries[0].version)} className="text-sky-300 hover:text-sky-200">
-          Alle Änderungen
+          {t("Alle Änderungen", "All changes")}
         </a>
         <button
           onClick={close}
           autoFocus
           className="rounded-lg bg-sky-500/20 px-4 py-1.5 font-medium text-sky-100 ring-1 ring-sky-400/40 hover:bg-sky-500/30"
         >
-          Verstanden
+          {t("Verstanden", "Got it")}
         </button>
       </div>
     </dialog>

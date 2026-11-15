@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
+import { tr } from "@/lib/i18n";
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
@@ -73,7 +74,7 @@ export function Skeleton({ className = "" }: { className?: string }) {
 export function ErrorNote({ message }: { message: string }) {
   return (
     <div className="rounded-xl bg-rose-500/10 p-4 text-sm text-rose-200 ring-1 ring-rose-400/30">
-      Daten konnten nicht geladen werden: {message}
+      {tr("Daten konnten nicht geladen werden", "Data could not be loaded")}: {message}
     </div>
   );
 }

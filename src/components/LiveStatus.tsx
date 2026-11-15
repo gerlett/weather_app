@@ -4,13 +4,15 @@ import { useEffect, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { LIVE_INTERVAL_MS } from "@/hooks/useLiveWeather";
 import { time } from "@/lib/format";
+import { useLang } from "@/lib/i18n";
 
 /** "● Live · geprüft vor 12 s · Messwert 09:15" with a manual refresh button. */
 export function LiveStatus({ lastCheck, checking, valueTime, onRefresh }: { lastCheck: number; checking: boolean; valueTime: string; onRefresh: () => void }) {
+  const { t } = useLang();
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
   }, []);
 
   const ago = lastCheck ? Math.max(0, Math.round((now - lastCheck) / 1000)) : null;
@@ -26,16 +28,16 @@ export function LiveStatus({ lastCheck, checking, valueTime, onRefresh }: { last
         Live
       </span>
       <span>
-        {ago == null ? "verbinde…" : ago < 5 ? "gerade geprüft" : ago < 120 ? `geprüft vor ${ago} s` : `geprüft vor ${Math.round(ago / 60)} min`}
+        {ago == null ? t("verbinde…", "connecting…") : ago < 5 ? t("gerade geprüft", "just checked") : ago < 120 ? t(`geprüft vor ${ago} s`, `checked ${ago} s ago`) : t(`geprüft vor ${Math.round(ago / 60)} min`, `checked ${Math.round(ago / 60)} min ago`)}
       </span>
-      <span>· Wert von {time(valueTime)} Uhr</span>
+      <span>· {t(`Wert von ${time(valueTime)} Uhr`, `value from ${time(valueTime)}`)}</span>
       <button
         onClick={onRefresh}
         disabled={checking}
         className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-white/80 ring-1 ring-white/20 hover:bg-white/20 disabled:opacity-60"
-        title="Jetzt aktualisieren"
+        title={t("Jetzt aktualisieren", "Refresh now")}
       >
-        <RefreshCw className={`h-3 w-3 ${checking ? "animate-spin" : ""}`} /> Aktualisieren
+        <RefreshCw className={`h-3 w-3 ${checking ? "animate-spin" : ""}`} /> {t("Aktualisieren", "Refresh")}
       </button>
     </div>
   );

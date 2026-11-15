@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { Timer } from "lucide-react";
 import { addDays, ARCHIVE_START, isoDate } from "@/lib/openmeteo";
-import { fullDate, MONTHS, time, weekday } from "@/lib/format";
+import { fullDate, months, time, weekday } from "@/lib/format";
+import { tr, useLang } from "@/lib/i18n";
 
 export type Group = "hour" | "h3" | "h6" | "h12" | "day" | "week" | "month" | "year";
 
@@ -16,13 +17,13 @@ export function presets() {
   const now = new Date();
   const today = startOfDay(now);
   return [
-    { label: "Heute", start: today, end: now },
-    { label: "Gestern", start: addDays(today, -1), end: today },
-    { label: "Letzte 24 h", start: new Date(now.getTime() - 24 * 3600_000), end: now },
-    { label: "Letzte 7 Tage", start: addDays(today, -7), end: now },
-    { label: "Dieser Monat", start: new Date(now.getFullYear(), now.getMonth(), 1), end: now },
-    { label: "Letzter Monat", start: new Date(now.getFullYear(), now.getMonth() - 1, 1), end: new Date(now.getFullYear(), now.getMonth(), 1) },
-    { label: "Dieses Jahr", start: new Date(now.getFullYear(), 0, 1), end: now },
+    { label: tr("Heute", "Today"), start: today, end: now },
+    { label: tr("Gestern", "Yesterday"), start: addDays(today, -1), end: today },
+    { label: tr("Letzte 24 h", "Last 24 h"), start: new Date(now.getTime() - 24 * 3600_000), end: now },
+    { label: tr("Letzte 7 Tage", "Last 7 days"), start: addDays(today, -7), end: now },
+    { label: tr("Dieser Monat", "This month"), start: new Date(now.getFullYear(), now.getMonth(), 1), end: now },
+    { label: tr("Letzter Monat", "Last month"), start: new Date(now.getFullYear(), now.getMonth() - 1, 1), end: new Date(now.getFullYear(), now.getMonth(), 1) },
+    { label: tr("Dieses Jahr", "This year"), start: new Date(now.getFullYear(), 0, 1), end: now },
   ];
 }
 
@@ -54,11 +55,11 @@ export function bucketLabel(key: string, g: Group, long = false) {
   if (g === "day") return long ? `${weekday(key)} ${fullDate(key)}` : `${key.slice(8, 10)}.${key.slice(5, 7)}.`;
   if (g === "week") {
     const end = addDays(new Date(key), 6);
-    return long ? `Woche ${fullDate(key)} – ${fullDate(isoDate(end))}` : `KW ${isoWeek(new Date(key))}`;
+    return long ? tr(`Woche ${fullDate(key)} – ${fullDate(isoDate(end))}`, `Week ${fullDate(key)} – ${fullDate(isoDate(end))}`) : tr(`KW ${isoWeek(new Date(key))}`, `W${isoWeek(new Date(key))}`);
   }
   if (g === "month") {
     const [y, m] = key.split("-");
-    return `${MONTHS[Number(m) - 1]} ${long ? y : y.slice(2)}`;
+    return `${months()[Number(m) - 1]} ${long ? y : y.slice(2)}`;
   }
   return key;
 }
@@ -84,10 +85,10 @@ export const GROUP_OPTIONS: { value: Group; label: string }[] = [
   { value: "h3", label: "3 h" },
   { value: "h6", label: "6 h" },
   { value: "h12", label: "12 h" },
-  { value: "day", label: "Tag" },
-  { value: "week", label: "Woche" },
-  { value: "month", label: "Monat" },
-  { value: "year", label: "Jahr" },
+  { value: "day", get label() { return tr("Tag", "Day"); } },
+  { value: "week", get label() { return tr("Woche", "Week"); } },
+  { value: "month", get label() { return tr("Monat", "Month"); } },
+  { value: "year", get label() { return tr("Jahr", "Year"); } },
 ];
 
 /** Rough bucket count, used to grey out intervals that would produce too many/too few bars. */
@@ -97,10 +98,11 @@ export function bucketCount(hours: number, g: Group) {
 }
 
 export function IntervalPicker({ span }: { span: Span }) {
+  const { t } = useLang();
   return (
     <div className="flex flex-wrap items-center gap-2">
       <span className="flex items-center gap-1 text-xs uppercase tracking-wider text-slate-500">
-        <Timer className="h-3.5 w-3.5" /> Intervall
+        <Timer className="h-3.5 w-3.5" /> {t("Intervall", "Interval")}
       </span>
       <div className="inline-flex flex-wrap gap-1 rounded-xl bg-white/5 p-1 ring-1 ring-white/10" role="tablist">
         {GROUP_OPTIONS.map((o) => {
@@ -113,7 +115,7 @@ export function IntervalPicker({ span }: { span: Span }) {
               role="tab"
               aria-selected={active}
               disabled={disabled}
-              title={disabled ? "Zu viele Intervalle für diesen Zeitraum" : `${n} Intervall${n === 1 ? "" : "e"}`}
+              title={disabled ? t("Zu viele Intervalle für diesen Zeitraum", "Too many intervals for this period") : t(`${n} Intervall${n === 1 ? "" : "e"}`, `${n} interval${n === 1 ? "" : "s"}`)}
               onClick={() => span.setGroup(o.value)}
               className={`rounded-lg px-2.5 py-1 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-30 ${
                 active ? "bg-sky-500 text-white shadow" : "text-slate-300 hover:bg-white/10 hover:text-white"
@@ -169,17 +171,18 @@ export function useSpan(defaultGroup: (hours: number) => Group) {
 export type Span = ReturnType<typeof useSpan>;
 
 export function RangePicker({ span }: { span: Span }) {
+  const { t } = useLang();
   const inputCls =
     "mt-1 block rounded-lg bg-slate-900 px-3 py-2 text-sm text-white ring-1 ring-white/10 [color-scheme:dark] focus:outline-none focus:ring-sky-400";
   return (
     <>
       <div className="flex flex-wrap items-end gap-3">
         <label className="text-xs text-slate-400">
-          Von
+          {t("Von", "From")}
           <input type="datetime-local" step={3600} min={`${ARCHIVE_START}T00:00`} max={span.endStr} value={span.startStr} onChange={(e) => span.setStart(e.target.value)} className={inputCls} />
         </label>
         <label className="text-xs text-slate-400">
-          Bis
+          {t("Bis", "To")}
           <input type="datetime-local" step={3600} min={span.startStr} max={toInput(new Date())} value={span.endStr} onChange={(e) => span.setEnd(e.target.value)} className={inputCls} />
         </label>
         <div className="flex flex-wrap gap-1.5">
@@ -194,7 +197,7 @@ export function RangePicker({ span }: { span: Span }) {
           ))}
         </div>
       </div>
-      {!span.valid && <p className="mt-4 text-sm text-amber-300">Bitte einen gültigen Zeitraum wählen (Ende nach Beginn).</p>}
+      {!span.valid && <p className="mt-4 text-sm text-amber-300">{t("Bitte einen gültigen Zeitraum wählen (Ende nach Beginn).", "Please choose a valid period (end after start).")}</p>}
     </>
   );
 }

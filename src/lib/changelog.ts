@@ -1,4 +1,5 @@
 import { APP_VERSION, compareVersions, parseVersion } from "./version";
+import { getLang, locale } from "./i18n";
 
 /**
  * The changelog is NOT part of the build: nginx serves `deploy/changelog/changelog.json`
@@ -10,15 +11,24 @@ import { APP_VERSION, compareVersions, parseVersion } from "./version";
  */
 export const CHANGELOG_URL = process.env.NEXT_PUBLIC_CHANGELOG_URL || "/changelog/changelog.json";
 
-export type ChangelogEntry = { version: string; date?: string; items: string[] };
+/** One line in both languages (a missing translation falls back to the other one). */
+export type ChangelogItem = { de: string; en: string };
+export type ChangelogEntry = { version: string; date?: string; items: ChangelogItem[] };
 
-/** Text of one item: German, then English, then whatever is there. */
-function itemText(item: unknown): string | null {
-  if (typeof item === "string") return item.trim() || null;
+/** The line in the active language. */
+export const itemIn = (item: ChangelogItem) => (getLang() === "de" ? item.de : item.en);
+
+const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
+
+/** One item as both languages; whatever text is there fills a missing language. */
+function itemText(item: unknown): ChangelogItem | null {
+  if (typeof item === "string") return item.trim() ? { de: item.trim(), en: item.trim() } : null;
   if (!item || typeof item !== "object") return null;
   const o = item as Record<string, unknown>;
-  for (const v of [o.de, o.en, ...Object.values(o)]) if (typeof v === "string" && v.trim()) return v.trim();
-  return null;
+  const any = Object.values(o).map(str).find(Boolean) ?? null;
+  const de = str(o.de) ?? str(o.en) ?? any;
+  const en = str(o.en) ?? str(o.de) ?? any;
+  return de && en ? { de, en } : null;
 }
 
 /** Readable entries, newest first. An unreadable entry is skipped, the rest still count. */
@@ -30,7 +40,7 @@ export function parseChangelog(json: unknown): ChangelogEntry[] {
     if (!e || typeof e !== "object") continue;
     const { version, date, items } = e as Record<string, unknown>;
     if (typeof version !== "string" || !parseVersion(version)) continue;
-    const texts = Array.isArray(items) ? items.map(itemText).filter((t): t is string => !!t) : [];
+    const texts = Array.isArray(items) ? items.map(itemText).filter((t): t is ChangelogItem => !!t) : [];
     if (!texts.length) continue;
     out.push({ version, date: typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : undefined, items: texts });
   }
@@ -57,7 +67,7 @@ export function unseenEntries(entries: ChangelogEntry[], lastSeen: string | null
 }
 
 /**
- * Search: case-insensitive on the text – an entry keeps only its matching lines –
+ * Search: case-insensitive on the text (both languages) – an entry keeps only its matching lines –
  * or on the version (prefix, e.g. `0.1` or `0.1.4`), which keeps the whole entry.
  */
 export function searchChangelog(entries: ChangelogEntry[], query: string): ChangelogEntry[] {
@@ -71,15 +81,15 @@ export function searchChangelog(entries: ChangelogEntry[], query: string): Chang
       out.push(e);
       continue;
     }
-    const items = e.items.filter((t) => t.toLowerCase().includes(q));
+    const items = e.items.filter((t) => t.de.toLowerCase().includes(q) || t.en.toLowerCase().includes(q));
     if (items.length) out.push({ ...e, items });
   }
   return out;
 }
 
-/** German date, e.g. `14. November 2026`. */
+/** Date in the active language, e.g. `14. November 2026` / `14 November 2026`. */
 export function formatChangelogDate(date?: string): string | null {
   if (!date) return null;
   const [y, m, d] = date.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString("de-AT", { day: "numeric", month: "long", year: "numeric" });
+  return new Date(y, m - 1, d).toLocaleDateString(locale(), { day: "numeric", month: "long", year: "numeric" });
 }

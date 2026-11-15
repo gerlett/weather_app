@@ -1,8 +1,10 @@
 import type { ChangelogEntry } from "@/lib/changelog";
-import { formatChangelogDate } from "@/lib/changelog";
+import { formatChangelogDate, itemIn } from "@/lib/changelog";
+import { useLang } from "@/lib/i18n";
 
 /** One release per block: version, date, its lines. Shared by the "Neu" dialog and the Änderungen page. */
 export function ChangelogEntries({ entries, compact = false }: { entries: ChangelogEntry[]; compact?: boolean }) {
+  useLang(); // re-render on a language switch
   return (
     <ol className={compact ? "space-y-4" : "space-y-8"}>
       {entries.map((e) => (
@@ -15,7 +17,7 @@ export function ChangelogEntries({ entries, compact = false }: { entries: Change
           </p>
           <ul className={`mt-2 list-disc space-y-1.5 pl-5 text-slate-300 ${compact ? "text-sm" : "text-sm sm:text-base"}`}>
             {e.items.map((t, i) => (
-              <li key={i}>{t}</li>
+              <li key={i}>{itemIn(t)}</li>
             ))}
           </ul>
         </li>

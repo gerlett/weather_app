@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
+import { useLang } from "@/lib/i18n";
 
 const PREFIX = "wetter-perg:open:";
 
@@ -25,6 +26,7 @@ export function CollapsibleSection({
   actions?: ReactNode;
   children: ReactNode;
 }) {
+  useLang(); // re-render on a language switch (titles come from the parent)
   const [open, setOpen] = useState(defaultOpen);
 
   // read stored state after mount (static export: no localStorage during prerender)

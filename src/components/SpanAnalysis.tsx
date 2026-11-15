@@ -8,6 +8,7 @@ import { fetchHourlySpan, type SpanHour } from "@/lib/openmeteo";
 import { SPAN_METRICS, spanMetric, type SpanMetric } from "@/lib/spanMetrics";
 import { fmt, fullDate, time } from "@/lib/format";
 import { useAsync } from "@/hooks/useAsync";
+import { locale, useLang } from "@/lib/i18n";
 import { bucketLabel, downloadCsv, groupKey, IntervalPicker, RangePicker, useSpan, type Group } from "./RangePicker";
 import { Card, chartTheme, ErrorNote, Skeleton, Stat } from "./ui";
 
@@ -61,6 +62,7 @@ function aggregate(rows: SpanHour[], g: Group, m: SpanMetric): Bucket[] {
 }
 
 export function SpanAnalysis({ location, initialMetric = "temperature", showMetricPicker = true }: { location: WeatherLocation; initialMetric?: string; showMetricPicker?: boolean }) {
+  const { t } = useLang();
   const [metricId, setMetricId] = useState(initialMetric);
   const m = spanMetric(metricId);
   const span = useSpan(defaultGroup);
@@ -90,7 +92,7 @@ export function SpanAnalysis({ location, initialMetric = "temperature", showMetr
       maxH,
       minH,
       maxB,
-      counts: (m.thresholds ?? []).map((t) => ({ label: t.label, n: known.filter((h) => t.test(h.v)).length })),
+      counts: (m.thresholds ?? []).map((th) => ({ th, n: known.filter((h) => th.test(h.v)).length })),
       missing: data.length - known.length,
       hours: data.length,
       archive: data.some((h) => h.source === "archive"),
@@ -99,7 +101,9 @@ export function SpanAnalysis({ location, initialMetric = "temperature", showMetr
   }, [data, buckets, m]);
 
   const csv = () => {
-    const head = isSum ? `Intervall;Summe_${m.unit};kumuliert_${m.unit};Stunden;fehlende_Stunden` : `Intervall;Min_${m.unit};Max_${m.unit};Mittel_${m.unit};Stunden;fehlende_Stunden`;
+    const head = isSum
+      ? t(`Intervall;Summe_${m.unit};kumuliert_${m.unit};Stunden;fehlende_Stunden`, `interval;total_${m.unit};cumulative_${m.unit};hours;missing_hours`)
+      : t(`Intervall;Min_${m.unit};Max_${m.unit};Mittel_${m.unit};Stunden;fehlende_Stunden`, `interval;min_${m.unit};max_${m.unit};mean_${m.unit};hours;missing_hours`);
     const rows = buckets.map((b) =>
       isSum
         ? `${bucketLabel(b.key, group, true)};${fmt(b.sum, d)};${fmt(b.cum, d)};${b.hours};${b.missing}`
@@ -108,7 +112,7 @@ export function SpanAnalysis({ location, initialMetric = "temperature", showMetr
     downloadCsv(`${m.id}_${location.id}_${span.startStr.replace(/[:T]/g, "-")}_${span.endStr.replace(/[:T]/g, "-")}.csv`, [head, ...rows]);
   };
 
-  const when = (t: string) => `${fullDate(t)} ${time(t)}`;
+  const when = (ts: string) => `${fullDate(ts)} ${time(ts)}`;
 
   return (
     <Card>
@@ -141,7 +145,7 @@ export function SpanAnalysis({ location, initialMetric = "temperature", showMetr
           <div className="space-y-3">
             <div className="rounded-2xl p-5 ring-1 ring-white/15" style={{ background: `linear-gradient(135deg, ${m.color}40, rgba(79,70,229,0.25))` }}>
               <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white/80">
-                <m.icon className="h-4 w-4" /> {m.label} · {isSum ? "Summe" : "Mittelwert"}
+                <m.icon className="h-4 w-4" /> {m.label} · {isSum ? t("Summe", "Total") : t("Mittelwert", "Mean")}
               </p>
               {data ? (
                 <p className="mt-2 text-5xl font-semibold tabular-nums text-white">
@@ -152,30 +156,30 @@ export function SpanAnalysis({ location, initialMetric = "temperature", showMetr
                 <Skeleton className="mt-2 h-12 w-40" />
               )}
               <p className="mt-2 text-xs text-white/70">
-                {start.toLocaleString("de-AT", { dateStyle: "medium", timeStyle: "short" })} – {end.toLocaleString("de-AT", { dateStyle: "medium", timeStyle: "short" })}
+                {start.toLocaleString(locale(), { dateStyle: "medium", timeStyle: "short" })} – {end.toLocaleString(locale(), { dateStyle: "medium", timeStyle: "short" })}
                 <br />
-                Dauer {spanHours < 48 ? `${fmt(spanHours, 0)} h` : `${fmt(spanHours / 24, 1)} Tage`}
+                {t("Dauer", "Duration")} {spanHours < 48 ? `${fmt(spanHours, 0)} h` : `${fmt(spanHours / 24, 1)} ${t("Tage", "days")}`}
               </p>
             </div>
             {stats && (
               <div className="grid grid-cols-2 gap-3">
                 {isSum ? (
                   <>
-                    <Stat label="Ø pro Tag" value={fmt(stats.total / Math.max(1, spanHours / 24), d)} unit={m.unit} />
-                    <Stat label="Stärkste Stunde" value={fmt(stats.maxH.v, d)} unit={m.unit} sub={stats.maxH.v > 0 ? when(stats.maxH.t) : "–"} />
-                    <Stat label="Höchstes Intervall" value={fmt(stats.maxB?.sum, d)} unit={m.unit} sub={stats.maxB && stats.maxB.sum > 0 ? bucketLabel(stats.maxB.key, group, true) : "–"} />
-                    <Stat label="Intervalle mit Wert > 0" value={String(buckets.filter((b) => b.sum > 0).length)} sub={`von ${buckets.length}`} />
+                    <Stat label={t("Ø pro Tag", "Ø per day")} value={fmt(stats.total / Math.max(1, spanHours / 24), d)} unit={m.unit} />
+                    <Stat label={t("Stärkste Stunde", "Peak hour")} value={fmt(stats.maxH.v, d)} unit={m.unit} sub={stats.maxH.v > 0 ? when(stats.maxH.t) : "–"} />
+                    <Stat label={t("Höchstes Intervall", "Highest interval")} value={fmt(stats.maxB?.sum, d)} unit={m.unit} sub={stats.maxB && stats.maxB.sum > 0 ? bucketLabel(stats.maxB.key, group, true) : "–"} />
+                    <Stat label={t("Intervalle mit Wert > 0", "Intervals with value > 0")} value={String(buckets.filter((b) => b.sum > 0).length)} sub={t(`von ${buckets.length}`, `of ${buckets.length}`)} />
                   </>
                 ) : (
                   <>
                     <Stat label="Maximum" value={fmt(stats.maxH.v, d)} unit={m.unit} sub={when(stats.maxH.t)} />
                     <Stat label="Minimum" value={fmt(stats.minH.v, d)} unit={m.unit} sub={when(stats.minH.t)} />
-                    <Stat label="Mittelwert" value={fmt(stats.avg, d)} unit={m.unit} />
-                    <Stat label="Spannweite" value={fmt(stats.maxH.v - stats.minH.v, d)} unit={m.unit} />
+                    <Stat label={t("Mittelwert", "Mean")} value={fmt(stats.avg, d)} unit={m.unit} />
+                    <Stat label={t("Spannweite", "Range")} value={fmt(stats.maxH.v - stats.minH.v, d)} unit={m.unit} />
                   </>
                 )}
                 {stats.counts.map((c) => (
-                  <Stat key={c.label} label={c.label} value={String(c.n)} sub={`von ${stats.hours} h`} />
+                  <Stat key={c.th.label} label={c.th.label} value={String(c.n)} sub={t(`von ${stats.hours} h`, `of ${stats.hours} h`)} />
                 ))}
               </div>
             )}
@@ -188,13 +192,13 @@ export function SpanAnalysis({ location, initialMetric = "temperature", showMetr
               <span className="flex items-center gap-3 text-xs text-slate-400">
                 {isSum ? (
                   <>
-                    <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: m.color }} /> Summe je Intervall</span>
-                    <span className="flex items-center gap-1"><span className="h-0.5 w-4 bg-amber-400" /> kumuliert</span>
+                    <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-sm" style={{ background: m.color }} /> {t("Summe je Intervall", "Total per interval")}</span>
+                    <span className="flex items-center gap-1"><span className="h-0.5 w-4 bg-amber-400" /> {t("kumuliert", "cumulative")}</span>
                   </>
                 ) : (
                   <>
                     <span className="flex items-center gap-1"><span className="h-0.5 w-4 bg-rose-400" /> Max</span>
-                    <span className="flex items-center gap-1"><span className="h-0.5 w-4" style={{ background: m.color }} /> Mittel</span>
+                    <span className="flex items-center gap-1"><span className="h-0.5 w-4" style={{ background: m.color }} /> {t("Mittel", "Mean")}</span>
                     <span className="flex items-center gap-1"><span className="h-0.5 w-4 bg-sky-400" /> Min</span>
                   </>
                 )}
@@ -213,7 +217,7 @@ export function SpanAnalysis({ location, initialMetric = "temperature", showMetr
                       {...chartTheme.tooltip}
                       labelFormatter={(k) => bucketLabel(String(k), group, true)}
                       formatter={(v, n) => {
-                        const names: Record<string, string> = { sum: "Summe", cum: "Kumuliert", min: "Minimum", max: "Maximum", avg: "Mittel", band: "Min – Max" };
+                        const names: Record<string, string> = { sum: t("Summe", "Total"), cum: t("Kumuliert", "Cumulative"), min: "Minimum", max: "Maximum", avg: t("Mittel", "Mean"), band: "Min – Max" };
                         if (Array.isArray(v)) return [`${fmt(Number(v[0]), d)} – ${fmt(Number(v[1]), d)} ${m.unit}`, names.band];
                         return [`${fmt(Number(v), d)} ${m.unit}`, names[String(n)] ?? String(n)];
                       }}
@@ -238,16 +242,16 @@ export function SpanAnalysis({ location, initialMetric = "temperature", showMetr
 
             {buckets.length > 0 && (
               <details className="mt-4 rounded-xl bg-white/[0.03] ring-1 ring-white/10" open={buckets.length <= 14}>
-                <summary className="cursor-pointer px-4 py-2 text-sm text-slate-300">Tabelle ({buckets.length} Intervalle)</summary>
+                <summary className="cursor-pointer px-4 py-2 text-sm text-slate-300">{t(`Tabelle (${buckets.length} Intervalle)`, `Table (${buckets.length} intervals)`)}</summary>
                 <div className="max-h-80 overflow-y-auto px-4 pb-3">
                   <table className="w-full text-sm tabular-nums">
                     <thead className="sticky top-0 bg-slate-900 text-left text-xs text-slate-500">
                       <tr>
-                        <th className="py-1.5 font-medium">Intervall</th>
+                        <th className="py-1.5 font-medium">{t("Intervall", "Interval")}</th>
                         {isSum ? (
-                          <><th className="text-right font-medium">Summe</th><th className="text-right font-medium">kumuliert</th></>
+                          <><th className="text-right font-medium">{t("Summe", "Total")}</th><th className="text-right font-medium">{t("kumuliert", "cumulative")}</th></>
                         ) : (
-                          <><th className="text-right font-medium">Min</th><th className="text-right font-medium">Max</th><th className="text-right font-medium">Mittel</th></>
+                          <><th className="text-right font-medium">Min</th><th className="text-right font-medium">Max</th><th className="text-right font-medium">{t("Mittel", "Mean")}</th></>
                         )}
                       </tr>
                     </thead>
@@ -256,7 +260,7 @@ export function SpanAnalysis({ location, initialMetric = "temperature", showMetr
                         <tr key={b.key}>
                           <td className="py-1.5">
                             {bucketLabel(b.key, group, true)}
-                            {b.missing > 0 && <span className="ml-2 text-xs text-amber-300">{b.missing} h ohne Daten</span>}
+                            {b.missing > 0 && <span className="ml-2 text-xs text-amber-300">{t(`${b.missing} h ohne Daten`, `${b.missing} h without data`)}</span>}
                           </td>
                           {isSum ? (
                             <><td className="text-right">{fmt(b.sum, d)} {m.unit}</td><td className="text-right text-slate-400">{fmt(b.cum, d)}</td></>
@@ -278,11 +282,14 @@ export function SpanAnalysis({ location, initialMetric = "temperature", showMetr
             <div className="mt-3 flex flex-wrap items-start justify-between gap-2 text-xs text-slate-500">
               <p className="flex-1">
                 <Info className="mr-1 inline h-3 w-3" />
-                Berechnet aus Stundenwerten
-                {isSum ? " (Wert einer Stunde = Summe der vorangehenden Stunde)" : " (Min/Max = niedrigster/höchster Stundenwert, Mittel = arithmetisches Mittel)"}.
-                Erstes/letztes Intervall kann angeschnitten sein.
-                {stats && stats.missing > 0 && <span className="text-amber-300"> {stats.missing} Stunden ohne Daten (nicht mitgezählt).</span>}
-                {" "}Quelle: Open-Meteo {stats?.archive ? "Reanalyse-Archiv" : ""}{stats?.archive && stats?.forecast ? " + " : ""}{stats?.forecast ? "Modellanalyse (letzte Tage)" : ""} – Modelldaten, keine Stationsmessung.
+                {t("Berechnet aus Stundenwerten", "Calculated from hourly values")}
+                {isSum
+                  ? t(" (Wert einer Stunde = Summe der vorangehenden Stunde)", " (value of an hour = total of the preceding hour)")
+                  : t(" (Min/Max = niedrigster/höchster Stundenwert, Mittel = arithmetisches Mittel)", " (min/max = lowest/highest hourly value, mean = arithmetic mean)")}
+                .{" "}
+                {t("Erstes/letztes Intervall kann angeschnitten sein.", "First/last interval may be partial.")}
+                {stats && stats.missing > 0 && <span className="text-amber-300"> {t(`${stats.missing} Stunden ohne Daten (nicht mitgezählt).`, `${stats.missing} hours without data (not counted).`)}</span>}
+                {" "}{t("Quelle", "Source")}: Open-Meteo {stats?.archive ? t("Reanalyse-Archiv", "reanalysis archive") : ""}{stats?.archive && stats?.forecast ? " + " : ""}{stats?.forecast ? t("Modellanalyse (letzte Tage)", "model analysis (last days)") : ""} – {t("Modelldaten, keine Stationsmessung.", "model data, not station measurements.")}
               </p>
               <button onClick={csv} disabled={!buckets.length} className="inline-flex items-center gap-1 rounded-lg bg-white/5 px-2.5 py-1 text-slate-300 ring-1 ring-white/10 hover:bg-white/10 disabled:opacity-40">
                 <Download className="h-3.5 w-3.5" /> CSV

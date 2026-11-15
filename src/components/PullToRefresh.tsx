@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { RefreshCw } from "lucide-react";
+import { useLang } from "@/lib/i18n";
 
 /** Pull distance (px, after damping) that triggers the reload. */
 const THRESHOLD = 70;
@@ -22,6 +23,7 @@ function insideScrolled(el: EventTarget | null) {
  * globals.css so a pull never reloads twice.
  */
 export function PullToRefresh() {
+  const { t } = useLang();
   const [pull, setPull] = useState(0);
   const [reloading, setReloading] = useState(false);
   const start = useRef<number | null>(null);
@@ -80,7 +82,7 @@ export function PullToRefresh() {
           style={reloading ? undefined : { transform: `rotate(${(shown / THRESHOLD) * 270}deg)` }}
           aria-hidden
         />
-        {reloading ? "Wird neu geladen…" : ready ? "Loslassen zum Neuladen" : "Zum Neuladen ziehen"}
+        {reloading ? t("Wird neu geladen…", "Reloading…") : ready ? t("Loslassen zum Neuladen", "Release to reload") : t("Zum Neuladen ziehen", "Pull to reload")}
       </span>
     </div>
   );
