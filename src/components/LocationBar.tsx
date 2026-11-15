@@ -107,18 +107,22 @@ export function LocationBar({ selected, favorites, recent, onSelect, isFavorite,
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/80 backdrop-blur-lg">
-      <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6">
-        <Link href="/" className="flex shrink-0 items-center gap-2">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-sky-400 to-indigo-600 font-bold text-white">W</span>
-          <span className="hidden leading-tight sm:block">
-            <span className="block text-sm font-semibold text-white">Wetter Strudengau</span>
-            <span className="block text-[11px] uppercase tracking-widest text-slate-400">{t("Live · Prognose · Archiv", "Live · Forecast · Archive")}</span>
-          </span>
+      <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2 sm:px-6">
+        {/* Static export, no image optimiser: plain <img>. Assets come from scripts/generate-icons.mjs. */}
+        <Link href="/" className="flex shrink-0 items-center gap-2" aria-label={t("Wetter Strudengau – Startseite", "Wetter Strudengau – home")} title="Wetter Strudengau">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/icons/icon-192.png" alt="I like Thurnhof" width={192} height={192} className="h-12 w-12 shrink-0 sm:h-14 sm:w-14" />
         </Link>
 
         <nav className="ml-4 hidden items-center gap-1 lg:flex">
           {NAV.filter((n) => n.href !== "/#station" || selected.awekasId != null).map((n) => (
-            <a key={n.href} href={n.href} className="rounded-lg px-3 py-1.5 text-sm text-slate-300 hover:bg-white/10 hover:text-white">
+            <a
+              key={n.href}
+              href={n.href}
+              // Drop a leftover hash (e.g. #aktuell) so every menu click fires hashchange –
+              // that is what lets sections opened by earlier menu clicks close again.
+              onClick={() => window.location.hash && history.replaceState(history.state, "", window.location.pathname + window.location.search)}
+              className="rounded-lg px-3 py-1.5 text-sm text-slate-300 hover:bg-white/10 hover:text-white">
               {t(n.de, n.en)}
             </a>
           ))}
