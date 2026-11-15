@@ -36,7 +36,14 @@ export function CollapsibleSection({
     } catch {
       /* ignore */
     }
-    const onHash = () => window.location.hash === `#${id}` && setOpen(true);
+    // A jump link (/#id) opens the section once; the hash is dropped afterwards so the
+    // section, when it appears again later (e.g. after switching to a place without a
+    // station and back), follows only the stored state.
+    const onHash = () => {
+      if (window.location.hash !== `#${id}`) return;
+      setOpen(true);
+      history.replaceState(history.state, "", window.location.pathname + window.location.search);
+    };
     onHash();
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
