@@ -28,9 +28,11 @@ export function AppShell({
       <LocationBar
         selected={loc.selected}
         favorites={loc.favorites}
+        recent={loc.recent}
         onSelect={loc.select}
         isFavorite={loc.isFavorite}
         toggleFavorite={loc.toggleFavorite}
+        onRemove={loc.remove}
         geo={loc.geo}
         onLocate={loc.locate}
       />

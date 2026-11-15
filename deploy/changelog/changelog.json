@@ -1,6 +1,17 @@
 {
   "entries": [
     {
+      "version": "0.1.7",
+      "date": "2026-11-15",
+      "items": [
+        { "de": "Beim Öffnen der Website werden die aktuellen Werte sofort frisch geladen – auch UV-Index – und beim Zurückkehren in den Tab gleich aktualisiert." },
+        { "de": "Ein Klick auf Temperatur, Wind, Niederschlag, Luftdruck oder Luftfeuchte zeigt unter der großen Wetterkarte den Verlauf dieses Werts (24 Stunden, 7 oder 30 Tage)." },
+        { "de": "Gesuchte Orte bleiben unter „Zuletzt gesucht“ in der Ortsauswahl, lassen sich als Favorit markieren und – wie Favoriten – mit ✕ aus der Liste entfernen." },
+        { "de": "Der Bereich „Über die Station“ erscheint nur noch bei Orten mit erreichbarer Messstation." },
+        { "de": "Impressum ist nach dem Neuladen der Seite wieder eingeklappt." }
+      ]
+    },
+    {
       "version": "0.1.5",
       "date": "2026-11-15",
       "items": [

@@ -71,11 +71,13 @@ export function useLiveWeather(loc: WeatherLocation) {
       setChecking(true);
       try {
         if (full) {
-          const f = await fetchForecast(loc, forecastAt.current > 0);
+          // Always fresh (never a cached forecast), and the live current values in the
+          // same go – so on start the newest values and UV are there at once, not after a tick.
+          const [f, c] = await Promise.all([fetchForecast(loc, true), fetchCurrent(loc).catch(() => undefined)]);
           if (locRef.current !== key) return;
           forecastAt.current = Date.now();
           setForecast(f);
-          applyCurrent({ ...f.current, uv_index: liveRef.current?.uv_index });
+          applyCurrent(c ? { ...f.current, ...c.current } : { ...f.current, uv_index: liveRef.current?.uv_index });
         } else {
           const c = await fetchCurrent(loc);
           if (locRef.current !== key) return;
@@ -120,10 +122,15 @@ export function useLiveWeather(loc: WeatherLocation) {
     const onVisible = () => {
       if (visible() && Date.now() - lastCheckRef.current >= LIVE_INTERVAL_MS) tick();
     };
+    // back on the tab / app restored from the background (mobile bfcache) → catch up at once
     document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("pageshow", onVisible);
+    window.addEventListener("focus", onVisible);
     return () => {
       clearInterval(id);
       document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("pageshow", onVisible);
+      window.removeEventListener("focus", onVisible);
     };
   }, [refresh]);
 

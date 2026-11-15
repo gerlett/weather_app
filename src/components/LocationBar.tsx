@@ -10,9 +10,11 @@ import type { GeoStatus } from "@/hooks/useLocations";
 type Props = {
   selected: WeatherLocation;
   favorites: WeatherLocation[];
+  recent: WeatherLocation[];
   onSelect: (l: WeatherLocation) => void;
   isFavorite: (id: string) => boolean;
   toggleFavorite: (l: WeatherLocation) => void;
+  onRemove: (id: string) => void;
   geo: { status: GeoStatus; message?: string };
   onLocate: () => void;
 };
@@ -26,7 +28,7 @@ const NAV = [
   { href: "/#station", label: "Station" },
 ];
 
-export function LocationBar({ selected, favorites, onSelect, isFavorite, toggleFavorite, geo, onLocate }: Props) {
+export function LocationBar({ selected, favorites, recent, onSelect, isFavorite, toggleFavorite, onRemove, geo, onLocate }: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<WeatherLocation[]>([]);
@@ -67,8 +69,9 @@ export function LocationBar({ selected, favorites, onSelect, isFavorite, toggleF
 
   const q = query.trim().toLowerCase();
   const stations = REGIONAL_STATIONS.filter((s) => !q || s.name.toLowerCase().includes(q));
+  const searched = recent.filter((l) => !isFavorite(l.id));
 
-  const Row = ({ l }: { l: WeatherLocation }) => (
+  const Row = ({ l, removable = false }: { l: WeatherLocation; removable?: boolean }) => (
     <li className="group flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/10">
       <button onClick={() => pick(l)} className="flex min-w-0 flex-1 items-center gap-2 text-left">
         {l.kind === "station" ? <Radio className="h-4 w-4 shrink-0 text-sky-300" /> : <MapPin className="h-4 w-4 shrink-0 text-slate-400" />}
@@ -87,6 +90,11 @@ export function LocationBar({ selected, favorites, onSelect, isFavorite, toggleF
       >
         <Star className={`h-4 w-4 ${isFavorite(l.id) ? "fill-amber-300 text-amber-300" : ""}`} />
       </button>
+      {removable && (
+        <button onClick={() => onRemove(l.id)} aria-label={`${l.name} aus der Liste entfernen`} title="Aus der Liste entfernen" className="rounded p-1 text-slate-500 hover:text-rose-300">
+          <X className="h-4 w-4" />
+        </button>
+      )}
     </li>
   );
 
@@ -102,7 +110,7 @@ export function LocationBar({ selected, favorites, onSelect, isFavorite, toggleF
         </Link>
 
         <nav className="ml-4 hidden items-center gap-1 lg:flex">
-          {NAV.map((n) => (
+          {NAV.filter((n) => n.href !== "/#station" || selected.awekasId != null).map((n) => (
             <a key={n.href} href={n.href} className="rounded-lg px-3 py-1.5 text-sm text-slate-300 hover:bg-white/10 hover:text-white">
               {n.label}
             </a>
@@ -152,7 +160,7 @@ export function LocationBar({ selected, favorites, onSelect, isFavorite, toggleF
                   {!q && favorites.length > 0 && (
                     <div>
                       <p className="px-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Favoriten · im Browser gespeichert</p>
-                      <ul className="mt-1">{favorites.map((l) => <Row key={l.id} l={l} />)}</ul>
+                      <ul className="mt-1">{favorites.map((l) => <Row key={l.id} l={l} removable />)}</ul>
                     </div>
                   )}
                   {stations.length > 0 && (
@@ -168,6 +176,12 @@ export function LocationBar({ selected, favorites, onSelect, isFavorite, toggleF
                       </p>
                       <ul className="mt-1">{results.map((l) => <Row key={l.id} l={l} />)}</ul>
                       {!searching && results.length === 0 && <p className="px-2 py-1 text-xs text-slate-500">Keine Treffer.</p>}
+                    </div>
+                  )}
+                  {!q && searched.length > 0 && (
+                    <div>
+                      <p className="px-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Zuletzt gesucht</p>
+                      <ul className="mt-1">{searched.map((l) => <Row key={l.id} l={l} removable />)}</ul>
                     </div>
                   )}
                 </div>

@@ -7,12 +7,16 @@ import { ChevronDown, Mail } from "lucide-react";
 export function Imprint() {
   const ref = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
+    // Always starts collapsed – also on a reload of /#impressum. Only a click on an
+    // Impressum link opens it; the hash is dropped again so a later reload stays collapsed.
+    const clearHash = () => history.replaceState(history.state, "", window.location.pathname + window.location.search);
+    if (window.location.hash === "#impressum") clearHash();
     const onHash = () => {
       if (window.location.hash !== "#impressum" || !ref.current) return;
       ref.current.open = true;
       ref.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      clearHash();
     };
-    onHash();
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);

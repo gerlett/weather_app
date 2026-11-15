@@ -53,9 +53,12 @@ function Content({ selected, favorites }: { selected: WeatherLocation; favorites
       <Lazy id="klima">
         <ClimateSection location={selected} />
       </Lazy>
-      <Lazy id="station" minHeight={400}>
-        <StationSection location={selected} elevation={forecast.data?.elevation} />
-      </Lazy>
+      {/* only for places with a reachable measuring station (AWEKAS widget) */}
+      {selected.awekasId != null && (
+        <Lazy id="station" minHeight={400}>
+          <StationSection location={selected} elevation={forecast.data?.elevation} />
+        </Lazy>
+      )}
     </>
   );
 }
