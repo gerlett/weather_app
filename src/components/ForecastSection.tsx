@@ -5,15 +5,15 @@ import { Droplets, Navigation, Wind } from "lucide-react";
 import type { ForecastResponse } from "@/lib/openmeteo";
 import { weatherInfo } from "@/lib/weatherCodes";
 import { compass, dayMonth, fmt, time, weekday } from "@/lib/format";
-import { Card, chartTheme, SectionTitle, Skeleton } from "./ui";
+import { Card, chartTheme, Skeleton } from "./ui";
+import { CollapsibleSection } from "./CollapsibleSection";
 
 export function ForecastSection({ data }: { data?: ForecastResponse }) {
   if (!data) {
     return (
-      <section id="vorhersage" className="scroll-mt-24">
-        <SectionTitle eyebrow="Prognose" title="Wettervorhersage" />
+      <CollapsibleSection id="vorhersage" eyebrow="Prognose" title="Wettervorhersage" defaultOpen>
         <Skeleton className="h-72" />
-      </section>
+      </CollapsibleSection>
     );
   }
   const { hourly, daily, current } = data;
@@ -39,8 +39,7 @@ export function ForecastSection({ data }: { data?: ForecastResponse }) {
   const tMax = Math.max(...days.map(({ i }) => daily.temperature_2m_max[i] ?? -99));
 
   return (
-    <section id="vorhersage" className="scroll-mt-24">
-      <SectionTitle eyebrow="Prognose" title="Wettervorhersage" />
+    <CollapsibleSection id="vorhersage" eyebrow="Prognose" title="Wettervorhersage" defaultOpen>
       <div className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
         <Card>
           <div className="mb-3 flex items-center justify-between">
@@ -131,6 +130,6 @@ export function ForecastSection({ data }: { data?: ForecastResponse }) {
           </ul>
         </Card>
       </div>
-    </section>
+    </CollapsibleSection>
   );
 }

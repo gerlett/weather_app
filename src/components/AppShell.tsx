@@ -56,6 +56,10 @@ export function AppShell({
             <a className="underline hover:text-white" href="/aenderungen">
               Änderungen
             </a>
+            <span className="text-slate-600"> · </span>
+            <a className="underline hover:text-white" href="#impressum">
+              Impressum
+            </a>
           </p>
         </div>
         <Imprint />

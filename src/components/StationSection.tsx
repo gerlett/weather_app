@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { Camera, CloudLightning, ExternalLink, History, Map, Newspaper, PlayCircle, Radio, BarChart3, CloudSun } from "lucide-react";
 import { SITE_LINKS, type WeatherLocation } from "@/lib/locations";
-import { Card, SectionTitle } from "./ui";
+import { Card } from "./ui";
+import { CollapsibleSection } from "./CollapsibleSection";
 
 const SERVICES = [
   { href: SITE_LINKS.webcams, icon: Camera, title: "Webcams", text: "Live-Bilder aus dem Strudengau" },
@@ -31,8 +32,11 @@ function useWidgetTick() {
 export function StationSection({ location, elevation }: { location: WeatherLocation; elevation?: number }) {
   const tick = useWidgetTick();
   return (
-    <section id="station" className="scroll-mt-24">
-      <SectionTitle eyebrow="Über die Station" title={location.kind === "station" ? `Wetterstation ${location.name}` : location.name} />
+    <CollapsibleSection
+      id="station"
+      eyebrow="Über die Station"
+      title={location.kind === "station" ? `Wetterstation ${location.name}` : location.name}
+    >
 
       <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
         <Card>
@@ -114,6 +118,6 @@ export function StationSection({ location, elevation }: { location: WeatherLocat
           </div>
         </div>
       </div>
-    </section>
+    </CollapsibleSection>
   );
 }

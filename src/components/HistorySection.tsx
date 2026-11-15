@@ -7,7 +7,8 @@ import { REGIONAL_STATIONS, type WeatherLocation } from "@/lib/locations";
 import { archiveEnd, ARCHIVE_START, fetchHistory, type HistorySeries, type Metric, type RangeKey } from "@/lib/openmeteo";
 import { dayMonth, fmt, fullDate, time } from "@/lib/format";
 import { useAsync } from "@/hooks/useAsync";
-import { Card, chartTheme, ErrorNote, SectionTitle, Segmented, SERIES_COLORS, Skeleton, Stat } from "./ui";
+import { Card, chartTheme, ErrorNote, Segmented, SERIES_COLORS, Skeleton, Stat } from "./ui";
+import { CollapsibleSection } from "./CollapsibleSection";
 import { WindRose } from "./WindRose";
 
 const METRICS: { value: Metric; label: string; icon: typeof Thermometer; unit: string }[] = [
@@ -54,10 +55,12 @@ export function HistorySection({ location, favorites }: { location: WeatherLocat
   );
 
   return (
-    <section id="verlauf" className="scroll-mt-24">
-      <SectionTitle eyebrow="Wetterhistorie" title="Verlauf & Statistik">
-        <Segmented value={range} options={RANGES} onChange={setRange} size="sm" />
-      </SectionTitle>
+    <CollapsibleSection
+      id="verlauf"
+      eyebrow="Wetterhistorie"
+      title="Verlauf & Statistik"
+      actions={<Segmented value={range} options={RANGES} onChange={setRange} size="sm" />}
+    >
 
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -131,7 +134,7 @@ export function HistorySection({ location, favorites }: { location: WeatherLocat
           {data ? <StatsTable series={data} locs={locs} metric={metric} unit={m.unit} /> : <Skeleton className="h-48" />}
         </Card>
       </div>
-    </section>
+    </CollapsibleSection>
   );
 }
 

@@ -1,6 +1,14 @@
 {
   "entries": [
     {
+      "version": "0.1.5",
+      "date": "2026-11-15",
+      "items": [
+        { "de": "Die Bereiche Vorhersage, Verlauf & Statistik, Zeitraum-Auswertung, Klimakalender und Stationsinfo lassen sich per Klick auf die Überschrift ein- und ausklappen. Die Vorhersage ist anfangs offen, die übrigen Bereiche sind eingeklappt; Ihre Auswahl merkt sich der Browser." },
+        { "de": "Neuer Link „Impressum“ im Fußbereich öffnet Impressum und Datenschutz direkt." }
+      ]
+    },
+    {
       "version": "0.1.3",
       "date": "2026-11-14",
       "items": [

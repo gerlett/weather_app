@@ -8,7 +8,8 @@ import { fetchClimate, type ClimateDaily } from "@/lib/openmeteo";
 import { fmt, fullDate, MONTHS } from "@/lib/format";
 import { useAsync } from "@/hooks/useAsync";
 import NORMALS from "@/data/normals.json";
-import { Card, chartTheme, ErrorNote, SectionTitle, Segmented, Skeleton, Stat } from "./ui";
+import { Card, chartTheme, ErrorNote, Segmented, Skeleton, Stat } from "./ui";
+import { CollapsibleSection } from "./CollapsibleSection";
 
 const thisYear = new Date().getFullYear();
 const YEARS = Array.from({ length: thisYear - 1944 + 1 }, (_, i) => thisYear - i);
@@ -149,8 +150,11 @@ export function ClimateSection({ location }: { location: WeatherLocation }) {
   }, [recent.data, year, mode]);
 
   return (
-    <section id="klima" className="scroll-mt-24">
-      <SectionTitle eyebrow="Klimaanalyse" title={`Klimakalender ${year}`}>
+    <CollapsibleSection
+      id="klima"
+      eyebrow="Klimaanalyse"
+      title={`Klimakalender ${year}`}
+      actions={
         <div className="flex flex-wrap items-center gap-2">
           <Segmented
             value={mode}
@@ -165,7 +169,8 @@ export function ClimateSection({ location }: { location: WeatherLocation }) {
             {YEARS.map((y) => <option key={y}>{y}</option>)}
           </select>
         </div>
-      </SectionTitle>
+      }
+    >
 
       {recent.error && <ErrorNote message={recent.error} />}
 
@@ -284,6 +289,6 @@ export function ClimateSection({ location }: { location: WeatherLocation }) {
           <Wind className="h-3 w-3" /> Quelle: Open-Meteo Reanalyse-Archiv (ERA5/ERA5-Land, Daten ab 1940, ca. 5 Tage Verzögerung). Rasterdaten für die Koordinate der Station – keine Stationsmesswerte.
         </p>
       </Card>
-    </section>
+    </CollapsibleSection>
   );
 }

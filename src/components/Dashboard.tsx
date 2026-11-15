@@ -12,7 +12,8 @@ import { HistorySection } from "./HistorySection";
 import { ClimateSection } from "./ClimateSection";
 import { StationSection } from "./StationSection";
 import { SpanAnalysis } from "./SpanAnalysis";
-import { ErrorNote, SectionTitle } from "./ui";
+import { ErrorNote } from "./ui";
+import { CollapsibleSection } from "./CollapsibleSection";
 import { Lazy } from "./Lazy";
 
 export function Dashboard() {
@@ -36,14 +37,18 @@ function Content({ selected, favorites }: { selected: WeatherLocation; favorites
         <HistorySection location={selected} favorites={favorites} />
       </Lazy>
       <Lazy id="auswertung">
-      <section id="auswertung" className="scroll-mt-24">
-        <SectionTitle eyebrow="Zeitraum-Auswertung" title="Werte für beliebige Zeiträume">
-          <Link href="/auswertung" className="inline-flex items-center gap-1.5 rounded-xl bg-sky-500 px-4 py-2 text-sm font-medium text-white hover:bg-sky-400">
-            Alle Messwerte auswerten <ArrowRight className="h-4 w-4" />
-          </Link>
-        </SectionTitle>
-        <SpanAnalysis location={selected} initialMetric="precipitation" />
-      </section>
+        <CollapsibleSection
+          id="auswertung"
+          eyebrow="Zeitraum-Auswertung"
+          title="Werte für beliebige Zeiträume"
+          actions={
+            <Link href="/auswertung" className="inline-flex items-center gap-1.5 rounded-xl bg-sky-500 px-4 py-2 text-sm font-medium text-white hover:bg-sky-400">
+              Alle Messwerte auswerten <ArrowRight className="h-4 w-4" />
+            </Link>
+          }
+        >
+          <SpanAnalysis location={selected} initialMetric="precipitation" />
+        </CollapsibleSection>
       </Lazy>
       <Lazy id="klima">
         <ClimateSection location={selected} />
