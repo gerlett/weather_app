@@ -35,25 +35,14 @@ export function iconSvg(variant = "rounded", { text = true } = {}) {
     ? "translate(256 160) scale(0.62) translate(-241 -226)"
     : "translate(15 30)";
 
-  const lines = [
-    { str: "I like", y: 340, size: 82, len: 180 },
-    { str: "Thurnhof", y: 440, size: 118, len: 372 },
-  ];
-  const word = (l, attrs) =>
-    `<text x="256" y="${l.y}" font-size="${l.size}" textLength="${l.len}" lengthAdjust="spacingAndGlyphs" ${attrs}>${l.str}</text>`;
-  const depth = 12;
   const lettering = text
-    ? `<g font-family="Impact, 'Haettenschweiler', 'Arial Black', sans-serif" text-anchor="middle" transform="rotate(-7 256 400)">
-      ${lines
-        .map((l) => {
-          const extrusion = Array.from({ length: depth }, (_, k) => {
-            const d = depth - k;
-            return word(l, `fill="${d === depth ? "#3b0a05" : "url(#side)"}" transform="translate(${(-0.55 * d).toFixed(2)} ${d})"`);
-          }).join("");
-          return extrusion + word(l, `fill="url(#face)" stroke="#7c2d12" stroke-width="1.5" paint-order="stroke"`);
-        })
-        .join("")}
-    </g>`
+    ? letteringSvg(
+        [
+          { str: "I like", y: 340, size: 82, len: 180 },
+          { str: "Thurnhof", y: 440, size: 118, len: 372 },
+        ],
+        { cx: 256, rotate: "rotate(-7 256 400)" },
+      )
     : "";
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
@@ -75,15 +64,7 @@ export function iconSvg(variant = "rounded", { text = true } = {}) {
       <stop offset="0" stop-color="#ffffff"/>
       <stop offset="1" stop-color="#bfdbfe"/>
     </linearGradient>
-    <linearGradient id="face" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#fcd34d"/>
-      <stop offset="0.5" stop-color="#fbbf24"/>
-      <stop offset="1" stop-color="#f97316"/>
-    </linearGradient>
-    <linearGradient id="side" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#c2410c"/>
-      <stop offset="1" stop-color="#7c2d12"/>
-    </linearGradient>
+    ${LETTERING_DEFS}
   </defs>
   <rect width="512" height="512" rx="${rx}" fill="url(#sky)"/>
   <g transform="translate(256 256) scale(${scale}) translate(-256 -256)">
@@ -99,3 +80,31 @@ export function iconSvg(variant = "rounded", { text = true } = {}) {
 </svg>
 `;
 }
+
+const LETTERING_DEFS = `<linearGradient id="face" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fcd34d"/>
+      <stop offset="0.5" stop-color="#fbbf24"/>
+      <stop offset="1" stop-color="#f97316"/>
+    </linearGradient>
+    <linearGradient id="side" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#c2410c"/>
+      <stop offset="1" stop-color="#7c2d12"/>
+    </linearGradient>`;
+
+// 3D lettering: a stack of dark-red copies offset down-left (the extrusion),
+// topped by the yellow→orange face. Needs the Impact font when rasterised.
+function letteringSvg(lines, { cx, rotate, depth = 12 }) {
+  const word = (l, attrs) =>
+    `<text x="${cx}" y="${l.y}" font-size="${l.size}" textLength="${l.len}" lengthAdjust="spacingAndGlyphs" ${attrs}>${l.str}</text>`;
+  const body = lines
+    .map((l) => {
+      const extrusion = Array.from({ length: depth }, (_, k) => {
+        const d = depth - k;
+        return word(l, `fill="${d === depth ? "#3b0a05" : "url(#side)"}" transform="translate(${(-0.55 * d).toFixed(2)} ${d})"`);
+      }).join("");
+      return extrusion + word(l, `fill="url(#face)" stroke="#7c2d12" stroke-width="1.5" paint-order="stroke"`);
+    })
+    .join("");
+  return `<g font-family="Impact, 'Haettenschweiler', 'Arial Black', sans-serif" text-anchor="middle" transform="${rotate}">${body}</g>`;
+}
+

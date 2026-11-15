@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
@@ -29,29 +29,49 @@ export function CollapsibleSection({
   useLang(); // re-render on a language switch (titles come from the parent)
   const [open, setOpen] = useState(defaultOpen);
 
+  // Opened by a jump link rather than by the user: the next jump elsewhere closes it again.
+  const jumpOpened = useRef(false);
+
   // read stored state after mount (static export: no localStorage during prerender)
   useEffect(() => {
-    try {
-      const v = localStorage.getItem(PREFIX + id);
-      if (v === "1") setOpen(true);
-      else if (v === "0") setOpen(false);
-    } catch {
-      /* ignore */
-    }
+    const stored = () => {
+      try {
+        const v = localStorage.getItem(PREFIX + id);
+        return v === "1" ? true : v === "0" ? false : defaultOpen;
+      } catch {
+        return defaultOpen;
+      }
+    };
+    // A re-run of this effect (dev Strict Mode) must not undo a jump that already
+    // opened the section and dropped the hash.
+    setOpen(jumpOpened.current || stored());
     // A jump link (/#id) opens the section once; the hash is dropped afterwards so the
     // section, when it appears again later (e.g. after switching to a place without a
-    // station and back), follows only the stored state.
-    const onHash = () => {
-      if (window.location.hash !== `#${id}`) return;
+    // station and back), follows only the stored state. A jump to any other section
+    // (including "Aktuell") returns a jump-opened section to its stored state, so menu
+    // clicks don't leave a trail of open sections behind; sections stored as open stay open.
+    // Read the hash from the event: the target section's listener may already have
+    // dropped it from the URL before this one runs.
+    const onHash = (e?: HashChangeEvent) => {
+      const hash = e ? new URL(e.newURL).hash : window.location.hash;
+      if (hash !== `#${id}`) {
+        if (hash && jumpOpened.current) {
+          jumpOpened.current = false;
+          setOpen(stored());
+        }
+        return;
+      }
+      jumpOpened.current = true;
       setOpen(true);
       history.replaceState(history.state, "", window.location.pathname + window.location.search);
     };
     onHash();
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
-  }, [id]);
+  }, [id, defaultOpen]);
 
   const toggle = () => {
+    jumpOpened.current = false; // the user decided; a later jump leaves it alone
     const next = !open;
     setOpen(next);
     try {
