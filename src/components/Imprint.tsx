@@ -1,9 +1,27 @@
+"use client";
+
+import { useEffect, useRef } from "react";
 import { ChevronDown, Mail } from "lucide-react";
 
-/** Impressum & Datenschutz – collapsed panel at the very bottom of every page. */
+/** Impressum & Datenschutz – collapsed panel at the very bottom of every page; #impressum links open it. */
 export function Imprint() {
+  const ref = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    // Always starts collapsed – also on a reload of /#impressum. Only a click on an
+    // Impressum link opens it; the hash is dropped again so a later reload stays collapsed.
+    const clearHash = () => history.replaceState(history.state, "", window.location.pathname + window.location.search);
+    if (window.location.hash === "#impressum") clearHash();
+    const onHash = () => {
+      if (window.location.hash !== "#impressum" || !ref.current) return;
+      ref.current.open = true;
+      ref.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      clearHash();
+    };
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
   return (
-    <details id="impressum" className="group border-t border-white/10 bg-slate-950/80">
+    <details ref={ref} id="impressum" className="group border-t border-white/10 bg-slate-950/80">
       <summary className="mx-auto flex max-w-7xl cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 text-sm text-slate-400 hover:text-white sm:px-6 [&::-webkit-details-marker]:hidden">
         <span>
           Impressum &amp; Datenschutz <span className="text-slate-600">·</span> © 2027{" "}

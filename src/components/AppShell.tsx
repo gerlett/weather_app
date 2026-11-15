@@ -6,6 +6,7 @@ import type { WeatherLocation } from "@/lib/locations";
 import { displayVersion } from "@/lib/version";
 import { Imprint } from "./Imprint";
 import { LocationBar } from "./LocationBar";
+import { PullToRefresh } from "./PullToRefresh";
 import { RateLimitBanner } from "./RateLimitBanner";
 import { UpdateWatcher } from "./UpdateWatcher";
 import { WhatsNew } from "./WhatsNew";
@@ -25,12 +26,15 @@ export function AppShell({
   const version = displayVersion();
   return (
     <div id="top" className="min-h-screen">
+      <PullToRefresh />
       <LocationBar
         selected={loc.selected}
         favorites={loc.favorites}
+        recent={loc.recent}
         onSelect={loc.select}
         isFavorite={loc.isFavorite}
         toggleFavorite={loc.toggleFavorite}
+        onRemove={loc.remove}
         geo={loc.geo}
         onLocate={loc.locate}
       />
@@ -55,6 +59,10 @@ export function AppShell({
             <span className="text-slate-600"> · </span>
             <a className="underline hover:text-white" href="/aenderungen">
               Änderungen
+            </a>
+            <span className="text-slate-600"> · </span>
+            <a className="underline hover:text-white" href="#impressum">
+              Impressum
             </a>
           </p>
         </div>

@@ -19,6 +19,9 @@
 #   ./deploy-web.sh --update-stack    # also replace docker-compose.yaml/nginx.conf/om-proxy.inc on the
 #                                     # host (old copies are backed up) and restart the stack
 #
+# Every deploy also ships deploy/changelog/changelog.json (no separate
+# ./deploy-changelog.sh needed; that one stays for changelog-only edits).
+#
 # First deploy: docker-compose.yaml, nginx.conf and (if present) deploy/.env ride
 # along and the stack is brought up – but ONLY if the host has no
 # docker-compose.yaml yet. Afterwards the host's stack files are left alone,
@@ -49,7 +52,7 @@ while [ $# -gt 0 ]; do
     --skip-build) SKIP_BUILD=1; shift ;;
     --no-provision) NO_PROVISION=1; shift ;;
     --update-stack) UPDATE_STACK=1; shift ;;
-    -h | --help) sed -n '2,32p' "$0"; exit 0 ;;
+    -h | --help) sed -n '2,35p' "$0"; exit 0 ;;
     *) echo "Unknown argument: $1" >&2; exit 1 ;;
   esac
 done
@@ -68,6 +71,18 @@ BUILD_ID="$VERSION-$GIT_HASH$DIRTY-$(date -u +%Y%m%d%H%M%S)"
 for f in docker-compose.yaml nginx.conf om-proxy.inc remote-install.sh bridge/server.mjs bridge/Dockerfile bridge/package-lock.json; do
   [ -f "$STACK/$f" ] || { echo "'$STACK/$f' not found." >&2; exit 1; }
 done
+
+# The changelog ships with every deploy (same check as deploy-changelog.sh). Without
+# an entry for this version, the "Neu auf der Website" popup has nothing new to show.
+CHANGELOG="$STACK/changelog/changelog.json"
+[ -f "$CHANGELOG" ] || { echo "'$CHANGELOG' not found." >&2; exit 1; }
+node --no-warnings -e '
+  const j = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+  if (!Array.isArray(j.entries)) throw new Error("no \"entries\" array");
+  for (const e of j.entries) if (!/^\d+\.\d+\.\d+$/.test(e.version ?? "")) throw new Error("bad version: " + JSON.stringify(e.version));
+  if (!j.entries.some((e) => e.version === process.argv[2]))
+    console.error("Note: changelog has no entry for " + process.argv[2] + " – the \"Neu auf der Website\" popup will not show it.");
+' "$CHANGELOG" "$VERSION" || { echo "'$CHANGELOG' is not a valid changelog." >&2; exit 1; }
 
 # Home Assistant bridge credentials – optional, without them the bridge serves JSON only.
 if [ ! -f "$STACK/.env.bridge" ]; then
@@ -162,7 +177,7 @@ mkdir -p "$STAGE/html" "$STAGE/.stack"
 cp -a out/. "$STAGE/html/"
 rm -f "$STAGE/html/.build-meta"
 printf '{"version":"%s","commit":"%s%s","buildId":"%s"}\n' "$VERSION" "$GIT_HASH" "$DIRTY" "$BUILD_ID" > "$STAGE/html/version.json"
-cp "$STACK/docker-compose.yaml" "$STACK/nginx.conf" "$STACK/om-proxy.inc" "$STACK/remote-install.sh" "$STAGE/.stack/"
+cp "$STACK/docker-compose.yaml" "$STACK/nginx.conf" "$STACK/om-proxy.inc" "$STACK/remote-install.sh" "$CHANGELOG" "$STAGE/.stack/"
 if [ "$HAS_ENV" -eq 1 ]; then cp "$STACK/.env" "$STAGE/.stack/.env"; fi
 if [ -f "$STACK/.env.bridge" ]; then cp "$STACK/.env.bridge" "$STAGE/.stack/.env.bridge"; fi
 

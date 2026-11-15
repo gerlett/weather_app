@@ -6,6 +6,7 @@ import {
   ArrowUp,
   Droplets,
   Gauge,
+  LineChart,
   Navigation,
   Sunrise,
   Sunset,
@@ -15,7 +16,9 @@ import {
   Wind,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import type { ForecastResponse } from "@/lib/openmeteo";
+import { useState } from "react";
+import type { ForecastResponse, Metric as HistoryMetric } from "@/lib/openmeteo";
+import { MetricHistory } from "./MetricHistory";
 import type { WeatherLocation } from "@/lib/locations";
 import { TONE_BG, weatherInfo } from "@/lib/weatherCodes";
 import { beaufort, compass, fmt, fullDate, time, uvLabel } from "@/lib/format";
@@ -68,6 +71,8 @@ function Metric({
   delta,
   digits,
   changedAt,
+  active,
+  onShow,
   children,
 }: {
   icon: LucideIcon;
@@ -77,17 +82,26 @@ function Metric({
   delta?: number;
   digits?: number;
   changedAt: number;
+  /** Graph of this value is currently shown. */
+  active?: boolean;
+  /** Set → the card is a button that shows the value's history. */
+  onShow?: () => void;
   children?: React.ReactNode;
 }) {
   const changed = delta != null;
+  const Tag = onShow ? "button" : "div";
   return (
-    <div
+    <Tag
       key={changed ? changedAt : "static"}
-      className={`rounded-2xl bg-white/[0.04] p-4 ring-1 ring-white/10 transition hover:bg-white/[0.07] ${changed ? "animate-[flash_2.5s_ease-out]" : ""}`}
+      {...(onShow ? { type: "button" as const, onClick: onShow, "aria-pressed": !!active, title: `Verlauf ${label} anzeigen` } : {})}
+      className={`block w-full rounded-2xl p-4 text-left ring-1 transition ${
+        active ? "bg-sky-400/10 ring-sky-400/60" : "bg-white/[0.04] ring-white/10 hover:bg-white/[0.07]"
+      } ${onShow ? "cursor-pointer hover:ring-sky-400/40" : ""} ${changed ? "animate-[flash_2.5s_ease-out]" : ""}`}
     >
       <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-slate-400">
         <Icon className="h-4 w-4 text-sky-300" />
         {label}
+        {onShow && <LineChart className={`ml-auto h-3.5 w-3.5 ${active ? "text-sky-300" : "text-slate-500"}`} aria-hidden />}
       </div>
       <p className="mt-2 text-3xl font-semibold tabular-nums text-white">
         {value}
@@ -95,7 +109,7 @@ function Metric({
         <Delta delta={delta} digits={digits} at={changedAt} />
       </p>
       <div className="mt-1 space-y-0.5 text-xs text-slate-400">{children}</div>
-    </div>
+    </Tag>
   );
 }
 
@@ -108,6 +122,8 @@ export type LiveProps = {
 };
 
 export function CurrentSection({ location, data, loading, live }: { location: WeatherLocation; data?: ForecastResponse; loading: boolean; live: LiveProps }) {
+  const [graph, setGraph] = useState<HistoryMetric | null>(null);
+  const show = (m: HistoryMetric) => () => setGraph((g) => (g === m ? null : m));
   if (!data) {
     return (
       <section id="aktuell" className="grid gap-4 lg:grid-cols-[1.1fr_1.9fr]">
@@ -134,7 +150,8 @@ export function CurrentSection({ location, data, loading, live }: { location: We
 
   return (
     <section id="aktuell" className={`grid scroll-mt-24 gap-4 lg:grid-cols-[1.1fr_1.9fr] ${loading ? "opacity-70" : ""} transition-opacity`}>
-      {/* Hero */}
+      {/* Hero + (on click of a value card) its history right below */}
+      <div className="flex min-w-0 flex-col gap-4">
       <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${bg} p-6 shadow-2xl ring-1 ring-white/10 sm:p-8`}>
         <div className="pointer-events-none absolute -right-10 -top-10 opacity-20">
           <info.Icon className="h-64 w-64 text-white" strokeWidth={1} />
@@ -174,31 +191,37 @@ export function CurrentSection({ location, data, loading, live }: { location: We
           {location.awekasId ? " · Stationsmesswerte siehe unten" : ""}
         </p>
       </div>
+      {graph ? (
+        <MetricHistory location={location} metric={graph} onClose={() => setGraph(null)} />
+      ) : (
+        <p className="px-1 text-xs text-slate-500">Tipp: Auf einen Wert klicken zeigt seinen Verlauf.</p>
+      )}
+      </div>
 
       {/* Measurements */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-        <Metric icon={Thermometer} label="Temperatur" value={fmt(c.temperature_2m)} unit="°C" delta={ch.temperature_2m} changedAt={at}>
+        <Metric icon={Thermometer} label="Temperatur" value={fmt(c.temperature_2m)} unit="°C" delta={ch.temperature_2m} changedAt={at} active={graph === "temperature"} onShow={show("temperature")}>
           <p>Taupunkt {fmt(c.dew_point_2m)} °C</p>
           <p>Gefühlt {fmt(c.apparent_temperature)} °C</p>
         </Metric>
-        <Metric icon={Wind} label="Wind" value={fmt(c.wind_speed_10m)} unit="km/h" delta={ch.wind_speed_10m ?? ch.wind_gusts_10m} changedAt={at}>
+        <Metric icon={Wind} label="Wind" value={fmt(c.wind_speed_10m)} unit="km/h" delta={ch.wind_speed_10m ?? ch.wind_gusts_10m} changedAt={at} active={graph === "wind"} onShow={show("wind")}>
           <p className="flex items-center gap-1">
             <Navigation className="h-3 w-3" style={{ transform: `rotate(${c.wind_direction_10m + 180}deg)` }} />
             {compass(c.wind_direction_10m)} ({Math.round(c.wind_direction_10m)}°) · {bft.bft} Bft
           </p>
           <p>Böen {fmt(c.wind_gusts_10m)} km/h</p>
         </Metric>
-        <Metric icon={Umbrella} label="Niederschlag" value={fmt(rainToday)} unit="mm heute" delta={ch.precipitation} changedAt={at}>
+        <Metric icon={Umbrella} label="Niederschlag" value={fmt(rainToday)} unit="mm heute" delta={ch.precipitation} changedAt={at} active={graph === "precipitation"} onShow={show("precipitation")}>
           <p>Aktuell {fmt(c.precipitation)} mm/h</p>
           <p>Prognose Tag {fmt(daily.precipitation_sum[di])} mm · {fmt(daily.precipitation_probability_max[di], 0)} %</p>
         </Metric>
-        <Metric icon={Gauge} label="Luftdruck" value={fmt(c.pressure_msl)} unit="hPa" delta={ch.pressure_msl} changedAt={at}>
+        <Metric icon={Gauge} label="Luftdruck" value={fmt(c.pressure_msl)} unit="hPa" delta={ch.pressure_msl} changedAt={at} active={graph === "pressure"} onShow={show("pressure")}>
           <p className="flex items-center gap-1">
             <TrendIcon className="h-3 w-3" /> {trendLabel} ({trend > 0 ? "+" : ""}{fmt(trend)} hPa / 3 h)
           </p>
           <p>reduziert auf Meeresniveau</p>
         </Metric>
-        <Metric icon={Droplets} label="Luftfeuchte" value={fmt(c.relative_humidity_2m, 0)} unit="%" delta={ch.relative_humidity_2m} digits={0} changedAt={at}>
+        <Metric icon={Droplets} label="Luftfeuchte" value={fmt(c.relative_humidity_2m, 0)} unit="%" delta={ch.relative_humidity_2m} digits={0} changedAt={at} active={graph === "humidity"} onShow={show("humidity")}>
           <p>Bewölkung {fmt(c.cloud_cover, 0)} %</p>
           <p>Taupunkt {fmt(c.dew_point_2m)} °C</p>
         </Metric>

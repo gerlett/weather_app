@@ -5,6 +5,8 @@ import { DEFAULT_LOCATION, REGIONAL_STATIONS, type WeatherLocation } from "@/lib
 
 const KEY_SELECTED = "wetter-perg:selected"; // only written for a *manual* choice
 const KEY_FAVORITES = "wetter-perg:favorites";
+const KEY_RECENT = "wetter-perg:recent"; // places picked from the search, newest first
+const MAX_RECENT = 8;
 const KEY_AUTO = "wetter-perg:auto"; // sessionStorage: last geolocated choice
 
 function rememberAuto(loc: WeatherLocation) {
@@ -68,6 +70,7 @@ export type GeoStatus = "idle" | "locating" | "granted" | "denied" | "unsupporte
 export function useLocations() {
   const [selected, setSelected] = useState<WeatherLocation>(DEFAULT_LOCATION);
   const [favorites, setFavorites] = useState<WeatherLocation[]>([DEFAULT_LOCATION]);
+  const [recent, setRecent] = useState<WeatherLocation[]>([]);
   const [ready, setReady] = useState(false);
   const [geo, setGeo] = useState<{ status: GeoStatus; km?: number; message?: string }>({ status: "idle" });
 
@@ -120,6 +123,7 @@ export function useLocations() {
     // Refresh regional station definitions from code (e.g. a newly added awekasId).
     const sync = (l: WeatherLocation) => REGIONAL_STATIONS.find((s) => s.id === l.id) ?? l;
     setFavorites(read<WeatherLocation[]>(KEY_FAVORITES, [DEFAULT_LOCATION]).map(sync));
+    setRecent(read<WeatherLocation[]>(KEY_RECENT, []));
     const manual = read<WeatherLocation | null>(KEY_SELECTED, null);
     let auto: WeatherLocation | null = null;
     try {
@@ -137,11 +141,19 @@ export function useLocations() {
     if (ready) write(KEY_FAVORITES, favorites);
   }, [favorites, ready]);
 
+  useEffect(() => {
+    if (ready) write(KEY_RECENT, recent);
+  }, [recent, ready]);
+
   /** Manual selection – remembered and preferred over geolocation on the next visit. */
   const select = useCallback((loc: WeatherLocation) => {
     setSelected(loc);
     write(KEY_SELECTED, loc);
     setGeo((g) => ({ ...g, message: undefined }));
+    // places from the search (not the fixed stations) stay in the dropdown
+    if (!REGIONAL_STATIONS.some((s) => s.id === loc.id) && loc.id !== "my-location") {
+      setRecent((r) => [loc, ...r.filter((x) => x.id !== loc.id)].slice(0, MAX_RECENT));
+    }
   }, []);
 
   const isFavorite = useCallback((id: string) => favorites.some((f) => f.id === id), [favorites]);
@@ -150,5 +162,11 @@ export function useLocations() {
     setFavorites((f) => (f.some((x) => x.id === loc.id) ? f.filter((x) => x.id !== loc.id) : [...f, loc]));
   }, []);
 
-  return { selected, select, favorites, isFavorite, toggleFavorite, ready, geo, locate };
+  /** Removes a place from the dropdown entirely (favourite and search history). */
+  const remove = useCallback((id: string) => {
+    setFavorites((f) => f.filter((x) => x.id !== id));
+    setRecent((r) => r.filter((x) => x.id !== id));
+  }, []);
+
+  return { selected, select, favorites, recent, isFavorite, toggleFavorite, remove, ready, geo, locate };
 }
