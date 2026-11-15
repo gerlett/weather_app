@@ -187,11 +187,18 @@ export function CurrentSection({ location, data, loading, live }: { location: We
             <span className="inline-flex items-center gap-1.5"><Sunset className="h-4 w-4" /> {time(daily.sunset[di]!)}</span>
           )}
         </div>
-        <LiveStatus lastCheck={live.lastCheck} checking={live.checking} valueTime={c.time} onRefresh={live.onRefresh} />
-        <p className="mt-1 text-xs text-white/60">
-          {fullDate(c.time)} · {t("Modelldaten Open-Meteo (Aktualisierung alle 15 min)", "Open-Meteo model data (updated every 15 min)")}
-          {location.awekasId ? t(" · Stationsmesswerte siehe unten", " · station readings below") : ""}
-        </p>
+        <LiveStatus
+          lastCheck={live.lastCheck}
+          checking={live.checking}
+          valueTime={c.time}
+          onRefresh={live.onRefresh}
+          details={
+            <p className="mt-1 text-xs text-white/60">
+              {fullDate(c.time)} · {t("Modelldaten Open-Meteo (Aktualisierung alle 15 min)", "Open-Meteo model data (updated every 15 min)")}
+              {location.awekasId ? t(" · Stationsmesswerte siehe unten", " · station readings below") : ""}
+            </p>
+          }
+        />
       </div>
       {graph ? (
         <MetricHistory location={location} metric={graph} onClose={() => setGraph(null)} />

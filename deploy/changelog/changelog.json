@@ -1,6 +1,13 @@
 {
   "entries": [
     {
+      "version": "0.1.12",
+      "date": "2026-11-15",
+      "items": [
+        { "de": "In der großen Wetterkarte ist die Live-Anzeige (zuletzt geprüft, Messzeit, Aktualisieren, Datenquelle) eingeklappt und öffnet sich per Klick auf „Live“; nach dem Neuladen ist sie wieder eingeklappt.", "en": "In the large weather card the live display (last checked, time of value, refresh, data source) is collapsed and opens with a click on “Live”; after a reload it is collapsed again." }
+      ]
+    },
+    {
       "version": "0.1.11",
       "date": "2026-11-15",
       "items": [
