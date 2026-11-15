@@ -15,6 +15,7 @@ import { SpanAnalysis } from "./SpanAnalysis";
 import { ErrorNote } from "./ui";
 import { CollapsibleSection } from "./CollapsibleSection";
 import { Lazy } from "./Lazy";
+import { useLang } from "@/lib/i18n";
 
 export function Dashboard() {
   return <AppShell>{(selected, loc) => <Content selected={selected} favorites={loc.favorites} />}</AppShell>;
@@ -23,6 +24,7 @@ export function Dashboard() {
 function Content({ selected, favorites }: { selected: WeatherLocation; favorites: ReturnType<typeof useLocations>["favorites"] }) {
   // slow tracker: current values every minute, full forecast every 15 min
   const forecast = useLiveWeather(selected);
+  const { t } = useLang();
   return (
     <>
       {forecast.error && !forecast.data && <ErrorNote message={forecast.error} />}
@@ -39,11 +41,11 @@ function Content({ selected, favorites }: { selected: WeatherLocation; favorites
       <Lazy id="auswertung">
         <CollapsibleSection
           id="auswertung"
-          eyebrow="Zeitraum-Auswertung"
-          title="Werte für beliebige Zeiträume"
+          eyebrow={t("Zeitraum-Auswertung", "Period analysis")}
+          title={t("Werte für beliebige Zeiträume", "Values for any period")}
           actions={
             <Link href="/auswertung" className="inline-flex items-center gap-1.5 rounded-xl bg-sky-500 px-4 py-2 text-sm font-medium text-white hover:bg-sky-400">
-              Alle Messwerte auswerten <ArrowRight className="h-4 w-4" />
+              {t("Alle Messwerte auswerten", "Analyse all measurements")} <ArrowRight className="h-4 w-4" />
             </Link>
           }
         >

@@ -9,29 +9,31 @@ import { dayMonth, fmt, fullDate, time } from "@/lib/format";
 import { useAsync } from "@/hooks/useAsync";
 import { Card, chartTheme, ErrorNote, Segmented, SERIES_COLORS, Skeleton, Stat } from "./ui";
 import { CollapsibleSection } from "./CollapsibleSection";
+import { tr, useLang } from "@/lib/i18n";
 import { WindRose } from "./WindRose";
 
 const METRICS: { value: Metric; label: string; icon: typeof Thermometer; unit: string }[] = [
-  { value: "temperature", label: "Temperatur", icon: Thermometer, unit: "°C" },
-  { value: "precipitation", label: "Niederschlag", icon: CloudRain, unit: "mm" },
+  { value: "temperature", get label() { return tr("Temperatur", "Temperature"); }, icon: Thermometer, unit: "°C" },
+  { value: "precipitation", get label() { return tr("Niederschlag", "Precipitation"); }, icon: CloudRain, unit: "mm" },
   { value: "wind", label: "Wind", icon: Wind, unit: "km/h" },
-  { value: "pressure", label: "Luftdruck", icon: Gauge, unit: "hPa" },
-  { value: "humidity", label: "Luftfeuchte", icon: Droplets, unit: "%" },
+  { value: "pressure", get label() { return tr("Luftdruck", "Pressure"); }, icon: Gauge, unit: "hPa" },
+  { value: "humidity", get label() { return tr("Luftfeuchte", "Humidity"); }, icon: Droplets, unit: "%" },
 ];
 
 const RANGES: { value: RangeKey; label: string }[] = [
   { value: "24h", label: "24 h" },
-  { value: "7d", label: "7 Tage" },
-  { value: "30d", label: "30 Tage" },
-  { value: "12m", label: "12 Monate" },
-  { value: "year", label: "Jahr" },
-  { value: "custom", label: "Zeitraum" },
+  { value: "7d", get label() { return tr("7 Tage", "7 days"); } },
+  { value: "30d", get label() { return tr("30 Tage", "30 days"); } },
+  { value: "12m", get label() { return tr("12 Monate", "12 months"); } },
+  { value: "year", get label() { return tr("Jahr", "Year"); } },
+  { value: "custom", get label() { return tr("Zeitraum", "Period"); } },
 ];
 
 const thisYear = new Date().getFullYear();
 const YEARS = Array.from({ length: thisYear - 1940 + 1 }, (_, i) => thisYear - i);
 
 export function HistorySection({ location, favorites }: { location: WeatherLocation; favorites: WeatherLocation[] }) {
+  const { t } = useLang();
   const [metric, setMetric] = useState<Metric>("temperature");
   const [range, setRange] = useState<RangeKey>("7d");
   const [year, setYear] = useState(thisYear - 1);
@@ -57,8 +59,8 @@ export function HistorySection({ location, favorites }: { location: WeatherLocat
   return (
     <CollapsibleSection
       id="verlauf"
-      eyebrow="Wetterhistorie"
-      title="Verlauf & Statistik"
+      eyebrow={t("Wetterhistorie", "Weather history")}
+      title={t("Verlauf & Statistik", "History & statistics")}
       actions={<Segmented value={range} options={RANGES} onChange={setRange} size="sm" />}
     >
 
@@ -70,7 +72,7 @@ export function HistorySection({ location, favorites }: { location: WeatherLocat
               value={year}
               onChange={(e) => setYear(Number(e.target.value))}
               className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm text-white ring-1 ring-white/10"
-              aria-label="Jahr"
+              aria-label={t("Jahr", "Year")}
             >
               {YEARS.map((y) => <option key={y}>{y}</option>)}
             </select>
@@ -78,7 +80,7 @@ export function HistorySection({ location, favorites }: { location: WeatherLocat
           {range === "custom" && (
             <div className="flex flex-wrap items-center gap-2 text-sm text-slate-300">
               <input type="date" min={ARCHIVE_START} max={end} value={start} onChange={(e) => setStart(e.target.value)} className="rounded-lg bg-slate-900 px-2 py-1 text-white ring-1 ring-white/10 [color-scheme:dark]" />
-              bis
+              {t("bis", "to")}
               <input type="date" min={start} max={archiveEnd()} value={end} onChange={(e) => setEnd(e.target.value)} className="rounded-lg bg-slate-900 px-2 py-1 text-white ring-1 ring-white/10 [color-scheme:dark]" />
             </div>
           )}
@@ -86,13 +88,13 @@ export function HistorySection({ location, favorites }: { location: WeatherLocat
 
         {/* comparison chips */}
         <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
-          <span className="text-xs uppercase tracking-wider text-slate-500">Vergleich</span>
+          <span className="text-xs uppercase tracking-wider text-slate-500">{t("Vergleich", "Compare")}</span>
           {locs.map((l, i) => (
             <span key={l.id} className="inline-flex items-center gap-1.5 rounded-full bg-white/5 py-1 pl-2.5 pr-1.5 ring-1 ring-white/10">
               <span className="h-2.5 w-2.5 rounded-full" style={{ background: SERIES_COLORS[i] }} />
               <span className="text-white">{l.name}</span>
               {i > 0 && (
-                <button onClick={() => setCompare((c) => c.filter((x) => x.id !== l.id))} aria-label={`${l.name} entfernen`} className="text-slate-400 hover:text-white">
+                <button onClick={() => setCompare((c) => c.filter((x) => x.id !== l.id))} aria-label={t(`${l.name} entfernen`, `Remove ${l.name}`)} className="text-slate-400 hover:text-white">
                   <X className="h-3.5 w-3.5" />
                 </button>
               )}
@@ -108,9 +110,9 @@ export function HistorySection({ location, favorites }: { location: WeatherLocat
                   if (l) setCompare((c) => [...c, l]);
                 }}
                 className="bg-transparent text-sm focus:outline-none"
-                aria-label="Ort zum Vergleich hinzufügen"
+                aria-label={t("Ort zum Vergleich hinzufügen", "Add a place to compare")}
               >
-                <option value="" className="bg-slate-900">Ort hinzufügen</option>
+                <option value="" className="bg-slate-900">{t("Ort hinzufügen", "Add place")}</option>
                 {candidates.map((c) => <option key={c.id} value={c.id} className="bg-slate-900">{c.name}</option>)}
               </select>
             </label>
@@ -130,7 +132,7 @@ export function HistorySection({ location, favorites }: { location: WeatherLocat
           {wind.data ? <WindRose points={wind.data.points} /> : wind.error ? <ErrorNote message={wind.error} /> : <Skeleton className="h-64" />}
         </Card>
         <Card>
-          <h3 className="mb-3 font-medium text-white">Kennzahlen · {RANGES.find((r) => r.value === range)?.label}{range === "year" ? ` ${year}` : ""}</h3>
+          <h3 className="mb-3 font-medium text-white">{t("Kennzahlen", "Key figures")} · {RANGES.find((r) => r.value === range)?.label}{range === "year" ? ` ${year}` : ""}</h3>
           {data ? <StatsTable series={data} locs={locs} metric={metric} unit={m.unit} /> : <Skeleton className="h-48" />}
         </Card>
       </div>
@@ -192,13 +194,13 @@ function HistoryChart({
               labelFormatter={(t) => label(String(t))}
               formatter={(v, n) => {
                 const name = String(n);
-                if (Array.isArray(v)) return [`${fmt(v[0])} – ${fmt(v[1])} ${unit}`, "Min – Max"];
-                if (name === "gust") return [`${fmt(Number(v))} ${unit}`, "Böen"];
+                if (Array.isArray(v)) return [`${fmt(v[0])} – ${fmt(v[1])} ${unit}`, tr("Min – Max", "Min – max")];
+                if (name === "gust") return [`${fmt(Number(v))} ${unit}`, tr("Böen", "Gusts")];
                 const i = Number(name.slice(1));
                 return [`${fmt(Number(v))} ${unit}`, locs[i]?.name ?? name];
               }}
             />
-            {comparing && <Legend formatter={(v: string) => (v.startsWith("v") ? locs[Number(v.slice(1))]?.name : v === "gust" ? "Böen" : "Min–Max")} />}
+            {comparing && <Legend formatter={(v: string) => (v.startsWith("v") ? locs[Number(v.slice(1))]?.name : v === "gust" ? tr("Böen", "Gusts") : "Min–Max")} />}
             {!comparing && rows.some((r) => r.band) && (
               <Area dataKey="band" stroke="none" fill={SERIES_COLORS[0]} fillOpacity={0.15} connectNulls={false} isAnimationActive={false} />
             )}
@@ -214,8 +216,8 @@ function HistoryChart({
         </ResponsiveContainer>
       </div>
       <p className="mt-2 text-xs text-slate-500">
-        {hourly ? "Stundenwerte" : "Tageswerte"} · Quelle: Open-Meteo {series[0].source === "archive" ? "Reanalyse-Archiv (ERA5, ab 1940)" : "Modelldaten"}
-        {gaps > 0 && <span className="text-amber-300"> · {gaps} fehlende Werte als Lücke dargestellt (nicht interpoliert)</span>}
+        {hourly ? tr("Stundenwerte", "Hourly values") : tr("Tageswerte", "Daily values")} · {tr("Quelle", "Source")}: Open-Meteo {series[0].source === "archive" ? tr("Reanalyse-Archiv (ERA5, ab 1940)", "reanalysis archive (ERA5, from 1940)") : tr("Modelldaten", "model data")}
+        {gaps > 0 && <span className="text-amber-300"> · {tr(`${gaps} fehlende Werte als Lücke dargestellt (nicht interpoliert)`, `${gaps} missing values shown as gaps (not interpolated)`)}</span>}
       </p>
     </div>
   );
@@ -246,15 +248,15 @@ function StatsTable({ series, locs, metric, unit }: { series: HistorySeries[]; l
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {metric === "precipitation" ? (
           <>
-            <Stat label="Summe" value={fmt(s.sum)} unit={unit} />
-            <Stat label="Max. Einzelwert" value={fmt(s.max)} unit={unit} sub={when(s.maxAt, s.resolution)} />
-            <Stat label={s.resolution === "daily" ? "Regentage (≥ 1 mm)" : "Stunden mit Regen"} value={String(s.wetDays)} />
+            <Stat label={tr("Summe", "Total")} value={fmt(s.sum)} unit={unit} />
+            <Stat label={tr("Max. Einzelwert", "Max. single value")} value={fmt(s.max)} unit={unit} sub={when(s.maxAt, s.resolution)} />
+            <Stat label={s.resolution === "daily" ? tr("Regentage (≥ 1 mm)", "Rain days (≥ 1 mm)") : tr("Stunden mit Regen", "Hours with rain")} value={String(s.wetDays)} />
           </>
         ) : (
           <>
             <Stat label="Maximum" value={fmt(s.max)} unit={unit} sub={when(s.maxAt, s.resolution)} />
             <Stat label="Minimum" value={fmt(s.min)} unit={unit} sub={when(s.minAt, s.resolution)} />
-            <Stat label="Mittelwert" value={fmt(s.avg)} unit={unit} />
+            <Stat label={tr("Mittelwert", "Mean")} value={fmt(s.avg)} unit={unit} />
           </>
         )}
       </div>
@@ -266,8 +268,8 @@ function StatsTable({ series, locs, metric, unit }: { series: HistorySeries[]; l
       <table className="w-full text-sm">
         <thead className="text-left text-xs uppercase tracking-wider text-slate-500">
           <tr>
-            <th className="py-2 font-medium">Ort</th>
-            {metric === "precipitation" ? <><th className="font-medium">Summe</th><th className="font-medium">Max</th></> : <><th className="font-medium">Max</th><th className="font-medium">Min</th><th className="font-medium">Mittel</th></>}
+            <th className="py-2 font-medium">{tr("Ort", "Place")}</th>
+            {metric === "precipitation" ? <><th className="font-medium">{tr("Summe", "Total")}</th><th className="font-medium">Max</th></> : <><th className="font-medium">Max</th><th className="font-medium">Min</th><th className="font-medium">{tr("Mittel", "Mean")}</th></>}
           </tr>
         </thead>
         <tbody className="divide-y divide-white/5 tabular-nums text-white">

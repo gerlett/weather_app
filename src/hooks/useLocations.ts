@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { DEFAULT_LOCATION, REGIONAL_STATIONS, type WeatherLocation } from "@/lib/locations";
+import { tr } from "@/lib/i18n";
 
 const KEY_SELECTED = "wetter-perg:selected"; // only written for a *manual* choice
 const KEY_FAVORITES = "wetter-perg:favorites";
@@ -76,7 +77,7 @@ export function useLocations() {
 
   const locate = useCallback(() => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
-      setGeo({ status: "unsupported", message: "Standortbestimmung wird von diesem Browser nicht unterstützt." });
+      setGeo({ status: "unsupported", message: tr("Standortbestimmung wird von diesem Browser nicht unterstützt.", "This browser does not support location detection.") });
       return;
     }
     setGeo({ status: "locating" });
@@ -87,12 +88,12 @@ export function useLocations() {
         if (km <= MAX_STATION_DISTANCE_KM) {
           setSelected(station);
           rememberAuto(station);
-          setGeo({ status: "granted", km, message: `Nächste Station: ${station.name} (${km.toFixed(1)} km entfernt)` });
+          setGeo({ status: "granted", km, message: tr(`Nächste Station: ${station.name} (${km.toFixed(1)} km entfernt)`, `Nearest station: ${station.name} (${km.toFixed(1)} km away)`) });
         } else {
           const mine: WeatherLocation = {
             id: "my-location",
-            name: "Mein Standort",
-            region: `${pos.latitude.toFixed(2)}° N, ${pos.longitude.toFixed(2)}° O`,
+            name: tr("Mein Standort", "My location"),
+            region: `${pos.latitude.toFixed(2)}° N, ${pos.longitude.toFixed(2)}° ${tr("O", "E")}`,
             latitude: pos.latitude,
             longitude: pos.longitude,
             kind: "place",
@@ -102,7 +103,10 @@ export function useLocations() {
           setGeo({
             status: "granted",
             km,
-            message: `Keine Station in der Nähe (nächste: ${station.name}, ${Math.round(km)} km) – Modelldaten für Ihren Standort.`,
+            message: tr(
+              `Keine Station in der Nähe (nächste: ${station.name}, ${Math.round(km)} km) – Modelldaten für Ihren Standort.`,
+              `No station nearby (nearest: ${station.name}, ${Math.round(km)} km) – model data for your location.`,
+            ),
           });
         }
         write(KEY_SELECTED, null); // automatic choice → keep locating on next start
@@ -112,8 +116,8 @@ export function useLocations() {
           status: "denied",
           message:
             err.code === err.PERMISSION_DENIED
-              ? "Standortzugriff abgelehnt – Standardstation Perg/Thurnhof wird angezeigt."
-              : "Standort konnte nicht bestimmt werden – Standardstation wird angezeigt.",
+              ? tr("Standortzugriff abgelehnt – Standardstation Perg/Thurnhof wird angezeigt.", "Location access denied – showing the default station Perg/Thurnhof.")
+              : tr("Standort konnte nicht bestimmt werden – Standardstation wird angezeigt.", "Location could not be determined – showing the default station."),
         }),
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 10 * 60 * 1000 },
     );

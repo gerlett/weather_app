@@ -7,11 +7,15 @@ import { weatherInfo } from "@/lib/weatherCodes";
 import { compass, dayMonth, fmt, time, weekday } from "@/lib/format";
 import { Card, chartTheme, Skeleton } from "./ui";
 import { CollapsibleSection } from "./CollapsibleSection";
+import { useLang } from "@/lib/i18n";
 
 export function ForecastSection({ data }: { data?: ForecastResponse }) {
+  const { t } = useLang();
+  const eyebrow = t("Prognose", "Forecast");
+  const title = t("Wettervorhersage", "Weather forecast");
   if (!data) {
     return (
-      <CollapsibleSection id="vorhersage" eyebrow="Prognose" title="Wettervorhersage" defaultOpen>
+      <CollapsibleSection id="vorhersage" eyebrow={eyebrow} title={title} defaultOpen>
         <Skeleton className="h-72" />
       </CollapsibleSection>
     );
@@ -39,15 +43,15 @@ export function ForecastSection({ data }: { data?: ForecastResponse }) {
   const tMax = Math.max(...days.map(({ i }) => daily.temperature_2m_max[i] ?? -99));
 
   return (
-    <CollapsibleSection id="vorhersage" eyebrow="Prognose" title="Wettervorhersage" defaultOpen>
+    <CollapsibleSection id="vorhersage" eyebrow={eyebrow} title={title} defaultOpen>
       <div className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
         <Card>
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="font-medium text-white">Nächste 48 Stunden</h3>
+            <h3 className="font-medium text-white">{t("Nächste 48 Stunden", "Next 48 hours")}</h3>
             <div className="flex gap-4 text-xs text-slate-400">
-              <span className="flex items-center gap-1"><span className="h-0.5 w-4 bg-amber-400" /> Temperatur</span>
-              <span className="flex items-center gap-1"><span className="h-0.5 w-4 border-t border-dashed border-slate-400" /> Gefühlt</span>
-              <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-sm bg-sky-400/70" /> Niederschlag</span>
+              <span className="flex items-center gap-1"><span className="h-0.5 w-4 bg-amber-400" /> {t("Temperatur", "Temperature")}</span>
+              <span className="flex items-center gap-1"><span className="h-0.5 w-4 border-t border-dashed border-slate-400" /> {t("Gefühlt", "Feels like")}</span>
+              <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-sm bg-sky-400/70" /> {t("Niederschlag", "Precipitation")}</span>
             </div>
           </div>
           {/* hourly icon strip */}
@@ -80,7 +84,7 @@ export function ForecastSection({ data }: { data?: ForecastResponse }) {
                 <Tooltip
                   {...chartTheme.tooltip}
                   labelFormatter={(_, p) => (p?.[0] ? `${weekday(p[0].payload.t)} ${time(p[0].payload.t)}` : "")}
-                  formatter={(v, n) => [n === "rain" ? `${fmt(Number(v))} mm` : `${fmt(Number(v))} °C`, n === "rain" ? "Niederschlag" : n === "temp" ? "Temperatur" : "Gefühlt"]}
+                  formatter={(v, n) => [n === "rain" ? `${fmt(Number(v))} mm` : `${fmt(Number(v))} °C`, n === "rain" ? t("Niederschlag", "Precipitation") : n === "temp" ? t("Temperatur", "Temperature") : t("Gefühlt", "Feels like")]}
                 />
                 <Bar yAxisId="r" dataKey="rain" fill="#38bdf8" fillOpacity={0.7} radius={[3, 3, 0, 0]} />
                 <Area yAxisId="t" type="monotone" dataKey="temp" stroke="#f59e0b" strokeWidth={2} fill="url(#tempFill)" />
@@ -91,17 +95,17 @@ export function ForecastSection({ data }: { data?: ForecastResponse }) {
         </Card>
 
         <Card className="p-3 sm:p-4">
-          <h3 className="mb-2 px-1 font-medium text-white">7 Tage</h3>
+          <h3 className="mb-2 px-1 font-medium text-white">{t("7 Tage", "7 days")}</h3>
           <ul className="divide-y divide-white/5">
-            {days.slice(0, 8).map(({ t, i }) => {
+            {days.slice(0, 8).map(({ t: d, i }) => {
               const w = weatherInfo(daily.weather_code[i]);
               const lo = daily.temperature_2m_min[i] ?? 0;
               const hi = daily.temperature_2m_max[i] ?? 0;
               const span = tMax - tMin || 1;
               return (
-                <li key={t} className="grid grid-cols-[4.5rem_1.75rem_1fr] items-center gap-2 px-1 py-2 text-sm sm:grid-cols-[4.5rem_1.75rem_3rem_1fr_4.5rem]">
+                <li key={d} className="grid grid-cols-[4.5rem_1.75rem_1fr] items-center gap-2 px-1 py-2 text-sm sm:grid-cols-[4.5rem_1.75rem_3rem_1fr_4.5rem]">
                   <span className="text-slate-300">
-                    {t === todayStr ? "Heute" : weekday(t)} <span className="text-xs text-slate-500">{dayMonth(t)}</span>
+                    {d === todayStr ? t("Heute", "Today") : weekday(d)} <span className="text-xs text-slate-500">{dayMonth(d)}</span>
                   </span>
                   <w.Icon className="h-5 w-5 text-sky-200" aria-label={w.label} />
                   <span className="hidden items-center gap-0.5 text-xs text-sky-300 sm:flex">
@@ -118,7 +122,7 @@ export function ForecastSection({ data }: { data?: ForecastResponse }) {
                     </span>
                     <span className="w-8 tabular-nums text-white">{fmt(hi, 0)}°</span>
                   </span>
-                  <span className="hidden items-center justify-end gap-1 text-xs text-slate-400 sm:flex" title="Max. Böen">
+                  <span className="hidden items-center justify-end gap-1 text-xs text-slate-400 sm:flex" title={t("Max. Böen", "Max. gusts")}>
                     <Wind className="h-3 w-3" />
                     {fmt(daily.wind_gusts_10m_max[i], 0)}
                     <Navigation className="h-3 w-3" style={{ transform: `rotate(${(daily.wind_direction_10m_dominant[i] ?? 0) + 180}deg)` }} />

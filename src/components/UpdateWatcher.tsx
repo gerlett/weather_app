@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { BUILD_ID } from "@/lib/version";
+import { useLang } from "@/lib/i18n";
 
 const CHECK_EVERY_MS = 5 * 60_000;
 const RELOAD_GUARD = "wetter-perg:chunk-reload"; // sessionStorage: one automatic reload per broken chunk
@@ -22,6 +23,7 @@ const RELOAD_GUARD = "wetter-perg:chunk-reload"; // sessionStorage: one automati
  * Development builds (no BUILD_ID) do nothing.
  */
 export function UpdateWatcher() {
+  const { t } = useLang();
   const [available, setAvailable] = useState(false);
 
   useEffect(() => {
@@ -98,12 +100,12 @@ export function UpdateWatcher() {
       role="status"
       className="fixed inset-x-4 top-20 z-50 mx-auto flex max-w-md items-center justify-between gap-3 rounded-2xl bg-slate-900/95 px-4 py-3 text-sm text-slate-200 shadow-2xl ring-1 ring-sky-400/40 backdrop-blur"
     >
-      <span>Eine neue Version der Website ist verfügbar.</span>
+      <span>{t("Eine neue Version der Website ist verfügbar.", "A new version of the website is available.")}</span>
       <button
         onClick={() => location.reload()}
         className="flex shrink-0 items-center gap-1.5 rounded-lg bg-sky-500/20 px-3 py-1.5 font-medium text-sky-100 ring-1 ring-sky-400/40 hover:bg-sky-500/30"
       >
-        <RefreshCw className="h-4 w-4" aria-hidden /> Neu laden
+        <RefreshCw className="h-4 w-4" aria-hidden /> {t("Neu laden", "Reload")}
       </button>
     </div>
   );

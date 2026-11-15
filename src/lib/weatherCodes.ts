@@ -12,44 +12,45 @@ import {
   Sun,
   type LucideIcon,
 } from "lucide-react";
+import { tr } from "./i18n";
 
-type Info = { label: string; icon: LucideIcon; nightIcon?: LucideIcon; tone: "clear" | "cloud" | "rain" | "snow" | "storm" | "fog" };
+type Info = { label: string; en: string; icon: LucideIcon; nightIcon?: LucideIcon; tone: "clear" | "cloud" | "rain" | "snow" | "storm" | "fog" };
 
-/** WMO weather interpretation codes → German label + icon */
+/** WMO weather interpretation codes → German/English label + icon */
 const CODES: Record<number, Info> = {
-  0: { label: "Klar", icon: Sun, nightIcon: Moon, tone: "clear" },
-  1: { label: "Überwiegend klar", icon: Sun, nightIcon: Moon, tone: "clear" },
-  2: { label: "Teilweise bewölkt", icon: CloudSun, nightIcon: CloudMoon, tone: "cloud" },
-  3: { label: "Bedeckt", icon: Cloud, tone: "cloud" },
-  45: { label: "Nebel", icon: CloudFog, tone: "fog" },
-  48: { label: "Raureifnebel", icon: CloudFog, tone: "fog" },
-  51: { label: "Leichter Nieselregen", icon: CloudDrizzle, tone: "rain" },
-  53: { label: "Nieselregen", icon: CloudDrizzle, tone: "rain" },
-  55: { label: "Starker Nieselregen", icon: CloudDrizzle, tone: "rain" },
-  56: { label: "Gefrierender Niesel", icon: CloudDrizzle, tone: "snow" },
-  57: { label: "Gefrierender Niesel", icon: CloudDrizzle, tone: "snow" },
-  61: { label: "Leichter Regen", icon: CloudRain, tone: "rain" },
-  63: { label: "Regen", icon: CloudRain, tone: "rain" },
-  65: { label: "Starker Regen", icon: CloudRain, tone: "rain" },
-  66: { label: "Gefrierender Regen", icon: CloudRain, tone: "snow" },
-  67: { label: "Gefrierender Regen", icon: CloudRain, tone: "snow" },
-  71: { label: "Leichter Schneefall", icon: CloudSnow, tone: "snow" },
-  73: { label: "Schneefall", icon: CloudSnow, tone: "snow" },
-  75: { label: "Starker Schneefall", icon: Snowflake, tone: "snow" },
-  77: { label: "Schneegriesel", icon: CloudSnow, tone: "snow" },
-  80: { label: "Regenschauer", icon: CloudRain, tone: "rain" },
-  81: { label: "Regenschauer", icon: CloudRain, tone: "rain" },
-  82: { label: "Heftige Schauer", icon: CloudRain, tone: "rain" },
-  85: { label: "Schneeschauer", icon: CloudSnow, tone: "snow" },
-  86: { label: "Starke Schneeschauer", icon: CloudSnow, tone: "snow" },
-  95: { label: "Gewitter", icon: CloudLightning, tone: "storm" },
-  96: { label: "Gewitter mit Hagel", icon: CloudLightning, tone: "storm" },
-  99: { label: "Schweres Gewitter mit Hagel", icon: CloudLightning, tone: "storm" },
+  0: { label: "Klar", en: "Clear", icon: Sun, nightIcon: Moon, tone: "clear" },
+  1: { label: "Überwiegend klar", en: "Mainly clear", icon: Sun, nightIcon: Moon, tone: "clear" },
+  2: { label: "Teilweise bewölkt", en: "Partly cloudy", icon: CloudSun, nightIcon: CloudMoon, tone: "cloud" },
+  3: { label: "Bedeckt", en: "Overcast", icon: Cloud, tone: "cloud" },
+  45: { label: "Nebel", en: "Fog", icon: CloudFog, tone: "fog" },
+  48: { label: "Raureifnebel", en: "Rime fog", icon: CloudFog, tone: "fog" },
+  51: { label: "Leichter Nieselregen", en: "Light drizzle", icon: CloudDrizzle, tone: "rain" },
+  53: { label: "Nieselregen", en: "Drizzle", icon: CloudDrizzle, tone: "rain" },
+  55: { label: "Starker Nieselregen", en: "Dense drizzle", icon: CloudDrizzle, tone: "rain" },
+  56: { label: "Gefrierender Niesel", en: "Freezing drizzle", icon: CloudDrizzle, tone: "snow" },
+  57: { label: "Gefrierender Niesel", en: "Freezing drizzle", icon: CloudDrizzle, tone: "snow" },
+  61: { label: "Leichter Regen", en: "Light rain", icon: CloudRain, tone: "rain" },
+  63: { label: "Regen", en: "Rain", icon: CloudRain, tone: "rain" },
+  65: { label: "Starker Regen", en: "Heavy rain", icon: CloudRain, tone: "rain" },
+  66: { label: "Gefrierender Regen", en: "Freezing rain", icon: CloudRain, tone: "snow" },
+  67: { label: "Gefrierender Regen", en: "Freezing rain", icon: CloudRain, tone: "snow" },
+  71: { label: "Leichter Schneefall", en: "Light snow", icon: CloudSnow, tone: "snow" },
+  73: { label: "Schneefall", en: "Snow", icon: CloudSnow, tone: "snow" },
+  75: { label: "Starker Schneefall", en: "Heavy snow", icon: Snowflake, tone: "snow" },
+  77: { label: "Schneegriesel", en: "Snow grains", icon: CloudSnow, tone: "snow" },
+  80: { label: "Regenschauer", en: "Rain showers", icon: CloudRain, tone: "rain" },
+  81: { label: "Regenschauer", en: "Rain showers", icon: CloudRain, tone: "rain" },
+  82: { label: "Heftige Schauer", en: "Violent showers", icon: CloudRain, tone: "rain" },
+  85: { label: "Schneeschauer", en: "Snow showers", icon: CloudSnow, tone: "snow" },
+  86: { label: "Starke Schneeschauer", en: "Heavy snow showers", icon: CloudSnow, tone: "snow" },
+  95: { label: "Gewitter", en: "Thunderstorm", icon: CloudLightning, tone: "storm" },
+  96: { label: "Gewitter mit Hagel", en: "Thunderstorm with hail", icon: CloudLightning, tone: "storm" },
+  99: { label: "Schweres Gewitter mit Hagel", en: "Severe thunderstorm with hail", icon: CloudLightning, tone: "storm" },
 };
 
 export function weatherInfo(code: number | null | undefined, isDay = true) {
-  const info = CODES[code ?? -1] ?? { label: "Unbekannt", icon: Cloud, tone: "cloud" as const };
-  return { ...info, Icon: !isDay && info.nightIcon ? info.nightIcon : info.icon };
+  const info = CODES[code ?? -1] ?? { label: "Unbekannt", en: "Unknown", icon: Cloud, tone: "cloud" as const };
+  return { ...info, label: tr(info.label, info.en), Icon: !isDay && info.nightIcon ? info.nightIcon : info.icon };
 }
 
 /** Hero background gradient per weather tone */
