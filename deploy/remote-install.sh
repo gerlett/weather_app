@@ -58,7 +58,7 @@ sync_bridge() {
 # still running the previous build may load one of its chunks later (e.g. when
 # navigating), so old ones are kept for 14 days. Same name = same content, so
 # keeping them never serves anything stale.
-mkdir -p html changelog   # changelog/: deploy-changelog.sh, never touched here
+mkdir -p html changelog   # changelog/: shipped with every deploy, or alone by deploy-changelog.sh
 find html -mindepth 1 -maxdepth 1 ! -name _next -exec rm -rf {} +
 if [ -d html/_next ]; then
   find html/_next -mindepth 1 -maxdepth 1 ! -name static -exec rm -rf {} +
@@ -67,6 +67,15 @@ if [ -d html/_next ]; then
 fi
 cp -a "$IN/html/." html/
 echo "Site updated ($(cat html/version.json 2>/dev/null || echo 'no version.json'))."
+
+# The changelog travels with every deploy; written via temp file + rename so
+# nginx never serves a half-written file.
+if [ -f "$IN/.stack/changelog.json" ]; then
+  cp "$IN/.stack/changelog.json" changelog/.changelog.json.tmp
+  chmod 644 changelog/.changelog.json.tmp
+  mv changelog/.changelog.json.tmp changelog/changelog.json
+  echo "Changelog updated."
+fi
 
 # --- 2. the stack ----------------------------------------------------------------
 if [ "$NO_PROVISION" = 1 ]; then
