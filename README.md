@@ -21,7 +21,7 @@ The build is fully static (`○ /`), so it can be hosted on Vercel, Netlify or a
 | Section | Content |
 | --- | --- |
 | **Aktuell** | Temperature, feels-like, dew point, wind (speed, gusts, direction, Beaufort), precipitation today, pressure + 3 h trend, humidity, cloud cover, UV, sunshine, sunrise/sunset |
-| **Vorhersage** | 48 h chart (temperature, feels-like, precipitation) with icon strip, 7-day forecast |
+| **Vorhersage** | 24 h chart (temperature, feels-like, precipitation) with icon strip, 7-day forecast |
 | **Verlauf** | 24 h / 7 d / 30 d / 12 months / any year since 1940 / custom date range · temperature, rain, wind, pressure, humidity · overlay up to 4 locations · statistics · wind rose |
 | **Auswertung** (`/auswertung` + compact on home) | Any measurement (temperature, feels-like, dew point, rain, snow, humidity, pressure, wind, gusts, clouds, sunshine, radiation) for a free start/end date-time back to 1940 · interval 1 h / 3 h / 6 h / 12 h / day / week / month / year · sums + cumulative for rain/snow/sun, min/max/average for all others · KPIs, table, CSV export · multiple panels side by side |
 | **Klima** | Climate calendar (each day of a year, temperature or rain), annual records (hottest/coldest/wettest day, strongest gust, frost/summer/hot days), 5-year comparison against the 1991–2020 normal |

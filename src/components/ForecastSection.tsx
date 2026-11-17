@@ -23,7 +23,7 @@ export function ForecastSection({ data }: { data?: ForecastResponse }) {
   const { hourly, daily, current } = data;
   const nowTs = new Date(current.time).getTime() - 3600_000;
   const start = hourly.time.findIndex((t) => new Date(t).getTime() >= nowTs);
-  const next48 = hourly.time.slice(start, start + 48).map((t, k) => {
+  const next24 = hourly.time.slice(start, start + 24).map((t, k) => {
     const i = start + k;
     return {
       t,
@@ -47,7 +47,7 @@ export function ForecastSection({ data }: { data?: ForecastResponse }) {
       <div className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
         <Card>
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="font-medium text-white">{t("Nächste 48 Stunden", "Next 48 hours")}</h3>
+            <h3 className="font-medium text-white">{t("Nächste 24 Stunden", "Next 24 hours")}</h3>
             <div className="flex gap-4 text-xs text-slate-400">
               <span className="flex items-center gap-1"><span className="h-0.5 w-4 bg-amber-400" /> {t("Temperatur", "Temperature")}</span>
               <span className="flex items-center gap-1"><span className="h-0.5 w-4 border-t border-dashed border-slate-400" /> {t("Gefühlt", "Feels like")}</span>
@@ -56,7 +56,7 @@ export function ForecastSection({ data }: { data?: ForecastResponse }) {
           </div>
           {/* hourly icon strip */}
           <div className="-mx-1 mb-2 flex overflow-x-auto pb-2">
-            {next48.filter((_, k) => k % 3 === 0).map((h) => {
+            {next24.filter((_, k) => k % 3 === 0).map((h) => {
               const w = weatherInfo(h.code, h.day);
               return (
                 <div key={h.t} className="flex min-w-14 flex-col items-center gap-1 px-1 text-xs">
@@ -70,7 +70,7 @@ export function ForecastSection({ data }: { data?: ForecastResponse }) {
           </div>
           <div className="h-56">
             <ResponsiveContainer>
-              <ComposedChart data={next48} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+              <ComposedChart data={next24} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="tempFill" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.35} />
