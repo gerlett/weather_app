@@ -227,8 +227,14 @@ export function ClimateSection({ location }: { location: WeatherLocation }) {
       eyebrow={t("Klimaanalyse", "Climate analysis")}
       title={t(`Klimakalender ${year}`, `Climate calendar ${year}`)}
       actions={
-        <div className="flex flex-wrap items-center gap-2">
-          <StationPicker value={station} onSelect={setStation} />
+        <div className="flex min-w-0 flex-col items-stretch gap-1.5 sm:flex-row sm:items-center sm:gap-2">
+          <div className="flex min-w-0 items-center gap-1 sm:gap-2">
+            <StationPicker value={station} onSelect={setStation} />
+            <select value={year} onChange={(e) => setYear(Number(e.target.value))} aria-label={t("Jahr", "Year")} className="shrink-0 rounded-lg bg-slate-900 px-2 py-1 text-xs text-white ring-1 ring-white/10 sm:px-3 sm:py-1.5 sm:text-sm">
+              {YEARS.map((y) => <option key={y}>{y}</option>)}
+            </select>
+          </div>
+          <div className="min-w-0">
           <Segmented
             value={mode}
             onChange={setMode}
@@ -239,16 +245,14 @@ export function ClimateSection({ location }: { location: WeatherLocation }) {
               icon: MODES[key].icon,
             }))}
           />
-          <select value={year} onChange={(e) => setYear(Number(e.target.value))} aria-label={t("Jahr", "Year")} className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm text-white ring-1 ring-white/10">
-            {YEARS.map((y) => <option key={y}>{y}</option>)}
-          </select>
+          </div>
         </div>
       }
     >
 
       {recent.error && <ErrorNote message={recent.error} />}
 
-      <div className="grid gap-4 xl:grid-cols-[1.5fr_1fr]">
+      <div className="grid gap-2 sm:gap-4 xl:grid-cols-[1.5fr_1fr]">
         <Card>
           <h3 className="mb-3 font-medium text-white">
             {tr(meta.titleDe, meta.titleEn)} · {t("jeder Tag des Jahres", "every day of the year")}

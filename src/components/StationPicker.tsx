@@ -71,11 +71,13 @@ export function StationPicker({
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className={`inline-flex items-center gap-1.5 rounded-full bg-sky-500/10 py-1 pl-2.5 pr-2 text-sky-200 ring-1 ring-sky-400/30 hover:bg-sky-500/20 ${mode === "add" ? "text-sm" : ""}`}
+        className="inline-flex min-w-0 items-center gap-1 rounded-full bg-sky-500/10 py-1 pl-2 pr-1.5 text-sky-200 ring-1 ring-sky-400/30 hover:bg-sky-500/20 sm:gap-1.5 sm:pl-2.5 sm:pr-2"
       >
-        {mode === "add" ? <Plus className="h-3.5 w-3.5 shrink-0" aria-hidden /> : <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />}
-        <span className="max-w-[11rem] truncate text-sm">{mode === "add" ? label : value?.name}</span>
-        <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition ${open ? "rotate-180" : ""}`} aria-hidden />
+        <span className="hidden sm:block">
+          {mode === "add" ? <Plus className="h-3.5 w-3.5 shrink-0" aria-hidden /> : <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />}
+        </span>
+        <span className="max-w-[5.5rem] truncate text-xs sm:max-w-[11rem] sm:text-sm">{mode === "add" ? label : value?.name}</span>
+        <ChevronDown className={`h-3 w-3 shrink-0 transition sm:h-3.5 sm:w-3.5 ${open ? "rotate-180" : ""}`} aria-hidden />
       </button>
 
       {open && (

@@ -20,12 +20,12 @@ export function ForecastSection({ location, model, onModelChange }: { location: 
   const eyebrow = t("Prognose", "Forecast");
   const title = t("Wettervorhersage", "Weather forecast");
   const sourceChip = (
-    <label className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/10 px-2.5 py-1 text-sky-200 ring-1 ring-sky-400/30">
-      <Cloud className="h-3.5 w-3.5 shrink-0" aria-hidden />
+    <label className="inline-flex min-w-0 items-center gap-1 rounded-full bg-sky-500/10 py-1 pl-2 pr-1.5 text-sky-200 ring-1 ring-sky-400/30 sm:gap-1.5 sm:pl-2.5 sm:pr-2">
+      <Cloud className="hidden h-3.5 w-3.5 shrink-0 sm:block" aria-hidden />
       <select
         value={model}
         onChange={(e) => onModelChange(e.target.value as ForecastModel)}
-        className="max-w-[11rem] bg-transparent text-sm focus:outline-none"
+        className="max-w-[5.5rem] bg-transparent text-xs focus:outline-none sm:max-w-[11rem] sm:text-sm"
         aria-label={t("Prognosemodell wählen", "Select forecast model")}
       >
         {FORECAST_MODELS.map((m) => (
@@ -35,7 +35,7 @@ export function ForecastSection({ location, model, onModelChange }: { location: 
     </label>
   );
   const actions = (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex min-w-0 flex-nowrap items-center gap-1 sm:gap-2">
       <StationPicker value={station} onSelect={setStation} />
       {sourceChip}
     </div>
