@@ -228,8 +228,8 @@ export function ClimateSection({ location }: { location: WeatherLocation }) {
       title={t(`Klimakalender ${year}`, `Climate calendar ${year}`)}
       actions={
         <div className="flex w-full min-w-0 flex-col gap-1 sm:w-auto sm:flex-row sm:items-center sm:gap-2">
-          <div className="flex w-full justify-start sm:w-auto"><StationPicker value={station} onSelect={setStation} /></div>
-          <div className="flex w-full justify-end sm:w-auto">
+          <div className="flex w-full min-w-0 items-center justify-between gap-1 sm:w-auto sm:justify-start sm:gap-2">
+            <StationPicker value={station} onSelect={setStation} />
             <select value={year} onChange={(e) => setYear(Number(e.target.value))} aria-label={t("Jahr", "Year")} className="shrink-0 rounded-lg bg-slate-900 px-2 py-1 text-xs text-white ring-1 ring-white/10 sm:px-3 sm:py-1.5 sm:text-sm">
               {YEARS.map((y) => <option key={y}>{y}</option>)}
             </select>
