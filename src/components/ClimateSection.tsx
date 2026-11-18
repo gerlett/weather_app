@@ -227,24 +227,24 @@ export function ClimateSection({ location }: { location: WeatherLocation }) {
       eyebrow={t("Klimaanalyse", "Climate analysis")}
       title={t(`Klimakalender ${year}`, `Climate calendar ${year}`)}
       actions={
-        <div className="flex min-w-0 flex-col items-stretch gap-1.5 sm:flex-row sm:items-center sm:gap-2">
-          <div className="flex min-w-0 items-center gap-1 sm:gap-2">
-            <StationPicker value={station} onSelect={setStation} />
+        <div className="flex w-full min-w-0 flex-col gap-1 sm:w-auto sm:flex-row sm:items-center sm:gap-2">
+          <div className="flex w-full justify-start sm:w-auto"><StationPicker value={station} onSelect={setStation} /></div>
+          <div className="flex w-full justify-end sm:w-auto">
             <select value={year} onChange={(e) => setYear(Number(e.target.value))} aria-label={t("Jahr", "Year")} className="shrink-0 rounded-lg bg-slate-900 px-2 py-1 text-xs text-white ring-1 ring-white/10 sm:px-3 sm:py-1.5 sm:text-sm">
               {YEARS.map((y) => <option key={y}>{y}</option>)}
             </select>
           </div>
-          <div className="min-w-0">
-          <Segmented
-            value={mode}
-            onChange={setMode}
-            size="sm"
-            options={(Object.keys(MODES) as Mode[]).map((key) => ({
-              value: key,
-              label: tr(MODES[key].de, MODES[key].en),
-              icon: MODES[key].icon,
-            }))}
-          />
+          <div className="w-full min-w-0 sm:w-auto">
+            <Segmented
+              value={mode}
+              onChange={setMode}
+              size="sm"
+              options={(Object.keys(MODES) as Mode[]).map((key) => ({
+                value: key,
+                label: tr(MODES[key].de, MODES[key].en),
+                icon: MODES[key].icon,
+              }))}
+            />
           </div>
         </div>
       }
@@ -333,8 +333,8 @@ export function ClimateSection({ location }: { location: WeatherLocation }) {
           </span>
         </div>
         {!recent.data ? <Skeleton className="h-72" /> : (
-          <div className="h-72">
-            <ResponsiveContainer>
+          <div className="h-72 w-full min-w-0">
+            <ResponsiveContainer width="100%" height="100%">
               {meta.chart === "line" ? (
                 <LineChart data={comparison} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
                   <CartesianGrid stroke={chartTheme.grid} vertical={false} />

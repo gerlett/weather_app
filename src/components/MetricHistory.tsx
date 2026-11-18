@@ -59,9 +59,9 @@ export function MetricHistory({ location, metric, onClose }: { location: Weather
         <Skeleton className="h-56" />
       ) : (
         <>
-          <div className="h-56">
-            <ResponsiveContainer>
-              <ComposedChart data={points} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
+          <div className="h-56 w-full min-w-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={points} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id={`mh-${metric}`} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor={m.color} stopOpacity={0.35} />

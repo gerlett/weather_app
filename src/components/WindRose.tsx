@@ -68,18 +68,18 @@ export function WindRose({ points }: { points: HistoryPoint[] }) {
           );
         })}
       </svg>
-      <div className="space-y-1.5 text-sm sm:space-y-3">
+      <div className="grid w-full grid-cols-2 gap-x-3 gap-y-1.5 text-sm sm:gap-y-3">
         <div>
           <p className="text-xs text-slate-400">{t("Hauptwindrichtung", "Prevailing direction")}</p>
           <p className="text-base font-semibold text-white sm:text-lg">{COMPASS[dominant]}</p>
         </div>
         <div>
-          <p className="text-xs text-slate-400">{t("Mittlere Geschwindigkeit", "Mean speed")}</p>
-          <p className="text-base font-semibold text-white sm:text-lg">{fmt(avg)} km/h</p>
-        </div>
-        <div>
           <p className="text-xs text-slate-400">{t("Windstille", "Calm")} (&lt; 2 km/h)</p>
           <p className="text-base font-semibold text-white sm:text-lg">{fmt((calm / valid.length) * 100, 0)} %</p>
+        </div>
+        <div>
+          <p className="text-xs text-slate-400">{t("Mittlere Geschwindigkeit", "Mean speed")}</p>
+          <p className="text-base font-semibold text-white sm:text-lg">{fmt(avg)} km/h</p>
         </div>
         <ul className="space-y-0.5 sm:space-y-1">
           {SPEED_BINS.map((b) => (

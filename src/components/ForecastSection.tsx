@@ -35,9 +35,9 @@ export function ForecastSection({ location, model, onModelChange }: { location: 
     </label>
   );
   const actions = (
-    <div className="flex min-w-0 flex-nowrap items-center gap-1 sm:gap-2">
-      <StationPicker value={station} onSelect={setStation} />
-      {sourceChip}
+    <div className="flex w-full min-w-0 flex-col gap-1 sm:w-auto sm:flex-row sm:items-center sm:gap-2">
+      <div className="flex w-full justify-start sm:w-auto"><StationPicker value={station} onSelect={setStation} /></div>
+      <div className="flex w-full justify-end sm:w-auto">{sourceChip}</div>
     </div>
   );
   if (!data) {
@@ -95,9 +95,9 @@ export function ForecastSection({ location, model, onModelChange }: { location: 
               );
             })}
           </div>
-          <div className="h-56">
-            <ResponsiveContainer>
-              <ComposedChart data={next24} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+          <div className="h-56 w-full min-w-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={next24} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="tempFill" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.35} />
@@ -139,7 +139,7 @@ export function ForecastSection({ location, model, onModelChange }: { location: 
                     <Droplets className="h-3 w-3" />
                     {fmt(daily.precipitation_sum[i])}
                   </span>
-                  <span className="flex items-center gap-2">
+                  <span className="flex min-w-0 items-center gap-2">
                     <span className="w-8 text-right tabular-nums text-slate-400">{fmt(lo, 0)}°</span>
                     <span className="relative h-1.5 flex-1 rounded-full bg-white/10">
                       <span

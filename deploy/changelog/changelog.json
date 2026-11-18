@@ -1,6 +1,13 @@
 {
   "entries": [
     {
+      "version": "0.2.2",
+      "date": "2026-11-18",
+      "items": [
+        { "de": "Mobil: Stationsauswahl links und Jahr/Prognosemodell rechts auf je voller Breite; Windrose in zwei Spalten; Diagramme nutzen jetzt die volle verfügbare Breite ohne abzuschneiden.", "en": "Mobile: station picker on the left and year/forecast model on the right, each full width; wind rose in two columns; charts now use the full available width without clipping." }
+      ]
+    },
+    {
       "version": "0.2.1",
       "date": "2026-11-18",
       "items": [

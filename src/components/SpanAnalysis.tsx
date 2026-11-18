@@ -213,8 +213,8 @@ export function SpanAnalysis({ location, initialMetric = "temperature", showMetr
             </div>
 
             {!data ? <Skeleton className="h-72" /> : (
-              <div className="h-72">
-                <ResponsiveContainer>
+              <div className="h-72 w-full min-w-0">
+                <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={buckets} margin={{ top: 5, right: 0, left: -15, bottom: 0 }}>
                     <CartesianGrid stroke={chartTheme.grid} vertical={false} />
                     <XAxis dataKey="key" stroke={chartTheme.axis} fontSize={11} tickLine={false} minTickGap={24} tickFormatter={(k: string) => bucketLabel(k, group)} />
