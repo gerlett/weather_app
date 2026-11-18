@@ -44,9 +44,7 @@ function tempColor(t: number) {
 }
 
 function rainColor(mm: number) {
-  if (mm < 0.1) return "rgba(255,255,255,0.05)";
-  const f = Math.min(1, Math.log1p(mm) / Math.log1p(40));
-  return `rgba(56,189,248,${0.2 + f * 0.8})`;
+  return sequential(mm, RAIN_STOPS, RAIN_COLORS);
 }
 
 type Monthly = { tmean: number | null; rain: number | null; sun: number | null; wind: number | null; pressure: number | null; humidity: number | null };
@@ -72,6 +70,8 @@ function monthly(d: ClimateDaily, year: number): Monthly[] {
 }
 
 const RAIN_STOPS = [0.1, 1, 5, 15, 40];
+// Precipitation runs from light (0 mm) to dark blue (40 mm).
+const RAIN_COLORS = [[239, 246, 255], [191, 219, 254], [125, 180, 240], [59, 130, 210], [12, 46, 110]];
 const WIND_STOPS = [0, 10, 20, 35, 60];
 const PRESSURE_STOPS = [980, 995, 1010, 1025, 1040];
 const HUMIDITY_STOPS = [0, 25, 50, 75, 100];

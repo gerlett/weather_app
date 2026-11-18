@@ -1,6 +1,13 @@
 {
   "entries": [
     {
+      "version": "0.2.4",
+      "date": "2026-11-18",
+      "items": [
+        { "de": "Im Klimakalender ist die Farbskala des Tagesniederschlags invertiert: wenig Niederschlag ist jetzt hell, viel (40 mm) dunkelblau.", "en": "In the climate calendar the daily precipitation colour scale is inverted: little precipitation is now light, a lot (40 mm) dark blue." }
+      ]
+    },
+    {
       "version": "0.2.3",
       "date": "2026-11-18",
       "items": [
