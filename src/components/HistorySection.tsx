@@ -252,9 +252,9 @@ function HistoryChart({
 
   return (
     <div className={loading ? "opacity-60 transition-opacity" : "transition-opacity"}>
-      <div className="h-80">
-        <ResponsiveContainer>
-          <ComposedChart data={rows} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+      <div className="h-80 w-full min-w-0">
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart data={rows} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
             <CartesianGrid stroke={chartTheme.grid} vertical={false} />
             <XAxis
               dataKey="t"
