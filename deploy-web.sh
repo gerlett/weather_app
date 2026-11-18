@@ -68,7 +68,7 @@ DIRTY=""
 git diff --quiet HEAD 2>/dev/null || DIRTY="-dirty"
 BUILD_ID="$VERSION-$GIT_HASH$DIRTY-$(date -u +%Y%m%d%H%M%S)"
 
-for f in docker-compose.yaml nginx.conf om-proxy.inc remote-install.sh bridge/server.mjs bridge/Dockerfile bridge/package-lock.json; do
+for f in docker-compose.yaml nginx.conf om-proxy.inc remote-install.sh bridge/server.mjs bridge/awekas.mjs bridge/Dockerfile bridge/package-lock.json; do
   [ -f "$STACK/$f" ] || { echo "'$STACK/$f' not found." >&2; exit 1; }
 done
 
@@ -142,7 +142,7 @@ if [ "$SKIP_BUILD" -eq 0 ]; then
   # Same-origin caching proxy on the server (deploy/nginx.conf). The MSYS guards keep
   # Git Bash from rewriting the leading-slash value into a Windows path.
   # Version + commit are built in and shown in the footer (src/lib/version.ts).
-  MSYS_NO_PATHCONV=1 MSYS2_ENV_CONV_EXCL="NEXT_PUBLIC_OM_PROXY" NEXT_PUBLIC_OM_PROXY=/api/om \
+  MSYS_NO_PATHCONV=1 MSYS2_ENV_CONV_EXCL="NEXT_PUBLIC_OM_PROXY,NEXT_PUBLIC_AW_PROXY" NEXT_PUBLIC_OM_PROXY=/api/om NEXT_PUBLIC_AW_PROXY=/api/aw \
     NEXT_PUBLIC_APP_VERSION="$VERSION" NEXT_PUBLIC_GIT_HASH="$GIT_HASH$DIRTY" NEXT_PUBLIC_BUILD_ID="$BUILD_ID" npm run build
   # what this out/ was built as – reused by --skip-build (not shipped)
   printf 'VERSION=%q
@@ -162,6 +162,10 @@ fi
 # value must not have been mangled into a Windows path by Git Bash).
 grep -rqs '"/api/om"' out/_next/static || grep -rqs '/api/om/forecast' out/_next/static || {
   echo "Build does not use the /api/om proxy – rebuild without --skip-build." >&2
+  exit 1
+}
+grep -rqs '"/api/aw"' out/_next/static || grep -rqs '/api/aw/history' out/_next/static || {
+  echo "Build does not use the /api/aw proxy – rebuild without --skip-build." >&2
   exit 1
 }
 # Open tabs compare this id with /version.json to notice the deploy (UpdateWatcher), so a
@@ -184,7 +188,7 @@ if [ -f "$STACK/.env.bridge" ]; then cp "$STACK/.env.bridge" "$STAGE/.stack/.env
 # Bridge build context; its station list is exported from the site's own definitions
 # (src/lib/locations.ts – Node runs the TypeScript file directly), so both never drift apart.
 mkdir -p "$STAGE/.stack/bridge"
-cp "$STACK/bridge/server.mjs" "$STACK/bridge/package.json" "$STACK/bridge/package-lock.json" \
+cp "$STACK/bridge/server.mjs" "$STACK/bridge/awekas.mjs" "$STACK/bridge/package.json" "$STACK/bridge/package-lock.json" \
    "$STACK/bridge/Dockerfile" "$STACK/bridge/.dockerignore" "$STAGE/.stack/bridge/"
 node --no-warnings -e 'import("./src/lib/locations.ts").then(m => process.stdout.write(JSON.stringify(m.REGIONAL_STATIONS, null, 1)))' \
   > "$STAGE/.stack/bridge/stations.json"

@@ -5,10 +5,10 @@ import "./globals.css";
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Wetter Strudengau · Wetterstation Perg/Thurnhof",
+  title: "Wetter · Wetterstation Perg/Thurnhof",
   description:
-    "Aktuelles Wetter, Vorhersage, Wetterhistorie und Klimaanalyse für Perg/Thurnhof und den Strudengau – live, interaktiv und mobilfreundlich.",
-  applicationName: "Wetter Strudengau",
+    "Aktuelles Wetter, Vorhersage, Wetterhistorie und Klimaanalyse für Perg/Thurnhof und Umgebung – live, interaktiv und mobilfreundlich.",
+  applicationName: "Wetter",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [

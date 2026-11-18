@@ -1,16 +1,19 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Area, Bar, CartesianGrid, ComposedChart, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { CloudRain, Droplets, Gauge, Plus, Thermometer, Wind, X } from "lucide-react";
-import { REGIONAL_STATIONS, type WeatherLocation } from "@/lib/locations";
+import { CloudRain, Droplets, Gauge, Thermometer, Wind, X } from "lucide-react";
+import type { WeatherLocation } from "@/lib/locations";
 import { archiveEnd, ARCHIVE_START, fetchHistory, type HistorySeries, type Metric, type RangeKey } from "@/lib/openmeteo";
+import { fetchStationHistory } from "@/lib/history";
 import { dayMonth, fmt, fullDate, time } from "@/lib/format";
 import { useAsync } from "@/hooks/useAsync";
+import { usePersistedStation } from "@/hooks/usePersistedStation";
 import { Card, chartTheme, ErrorNote, Segmented, SERIES_COLORS, Skeleton, Stat } from "./ui";
 import { CollapsibleSection } from "./CollapsibleSection";
 import { tr, useLang } from "@/lib/i18n";
 import { WindRose } from "./WindRose";
+import { StationPicker } from "./StationPicker";
 
 const METRICS: { value: Metric; label: string; icon: typeof Thermometer; unit: string }[] = [
   { value: "temperature", get label() { return tr("Temperatur", "Temperature"); }, icon: Thermometer, unit: "°C" },
@@ -31,6 +34,11 @@ const RANGES: { value: RangeKey; label: string }[] = [
 
 const thisYear = new Date().getFullYear();
 const YEARS = Array.from({ length: thisYear - 1940 + 1 }, (_, i) => thisYear - i);
+const COMPARE_KEY = "wetter-perg:history-compare";
+const isLocation = (v: unknown): v is WeatherLocation => {
+  const l = v as WeatherLocation | null;
+  return !!l && typeof l.id === "string" && typeof l.name === "string" && Number.isFinite(l.latitude) && Number.isFinite(l.longitude);
+};
 
 export function HistorySection({ location, favorites }: { location: WeatherLocation; favorites: WeatherLocation[] }) {
   const { t } = useLang();
@@ -40,28 +48,48 @@ export function HistorySection({ location, favorites }: { location: WeatherLocat
   const [start, setStart] = useState(`${thisYear - 1}-01-01`);
   const [end, setEnd] = useState(archiveEnd());
   const [compare, setCompare] = useState<WeatherLocation[]>([]);
+  // This section has its own station chip (independent of the top dashboard station).
+  const { station, setStation } = usePersistedStation(location, "wetter-perg:history-station");
+  const [restoredCompare, setRestoredCompare] = useState(false);
 
-  const locs = useMemo(() => [location, ...compare.filter((c) => c.id !== location.id)].slice(0, 4), [location, compare]);
+  // Restore this browser's comparison places after mount (no localStorage during prerender).
+  useEffect(() => {
+    try {
+      const saved: unknown = JSON.parse(localStorage.getItem(COMPARE_KEY) ?? "null");
+      if (Array.isArray(saved)) setCompare(saved.filter(isLocation).slice(0, 5));
+    } catch {
+      /* ignore */
+    }
+    setRestoredCompare(true);
+  }, []);
+
+  useEffect(() => {
+    if (!restoredCompare) return;
+    try { localStorage.setItem(COMPARE_KEY, JSON.stringify(compare)); } catch { /* ignore */ }
+  }, [compare, restoredCompare]);
+
+  const locs = useMemo(() => [station, ...compare.filter((c) => c.id !== station.id)].slice(0, 6), [station, compare]);
   const opts = { year, start, end };
   const key = JSON.stringify([locs.map((l) => l.id), metric, range, range === "year" ? year : 0, range === "custom" ? [start, end] : 0]);
 
-  const { data, error, loading } = useAsync(() => Promise.all(locs.map((l) => fetchHistory(l, metric, range, opts))), key);
-  // Wind rose always uses wind data of the main location for the same period.
-  const windKey = JSON.stringify([location.id, range, range === "year" ? year : 0, range === "custom" ? [start, end] : 0]);
-  const wind = useAsync(() => fetchHistory(location, "wind", range, opts), windKey);
+  const { data, error, loading } = useAsync(() => Promise.all(locs.map((l) => fetchStationHistory(l, metric, range, opts))), key);
+  // Wind rose keeps Open-Meteo: AWEKAS history has no wind direction.
+  const windKey = JSON.stringify([station.id, range, range === "year" ? year : 0, range === "custom" ? [start, end] : 0]);
+  const wind = useAsync(() => fetchHistory(station, "wind", range, opts), windKey);
 
   const m = METRICS.find((x) => x.value === metric)!;
   const comparing = locs.length > 1;
-  const candidates = [...favorites, ...REGIONAL_STATIONS].filter(
-    (l, i, a) => a.findIndex((x) => x.id === l.id) === i && !locs.some((x) => x.id === l.id),
-  );
-
   return (
     <CollapsibleSection
       id="verlauf"
       eyebrow={t("Wetterhistorie", "Weather history")}
       title={t("Verlauf & Statistik", "History & statistics")}
-      actions={<Segmented value={range} options={RANGES} onChange={setRange} size="sm" />}
+      actions={
+        <div className="flex flex-wrap items-center gap-2">
+          <StationPicker value={station} onSelect={setStation} />
+          <Segmented value={range} options={RANGES} onChange={setRange} size="sm" />
+        </div>
+      }
     >
 
       <Card>
@@ -100,27 +128,19 @@ export function HistorySection({ location, favorites }: { location: WeatherLocat
               )}
             </span>
           ))}
-          {locs.length < 4 && candidates.length > 0 && (
-            <label className="inline-flex items-center gap-1 rounded-full bg-sky-500/10 px-2.5 py-1 text-sky-200 ring-1 ring-sky-400/30">
-              <Plus className="h-3.5 w-3.5" />
-              <select
-                value=""
-                onChange={(e) => {
-                  const l = candidates.find((c) => c.id === e.target.value);
-                  if (l) setCompare((c) => [...c, l]);
-                }}
-                className="bg-transparent text-sm focus:outline-none"
-                aria-label={t("Ort zum Vergleich hinzufügen", "Add a place to compare")}
-              >
-                <option value="" className="bg-slate-900">{t("Ort hinzufügen", "Add place")}</option>
-                {candidates.map((c) => <option key={c.id} value={c.id} className="bg-slate-900">{c.name}</option>)}
-              </select>
-            </label>
+          {locs.length < 6 && (
+            <StationPicker
+              mode="add"
+              label={t("Ort hinzufügen", "Add place")}
+              exclude={locs.map((l) => l.id)}
+              suggestions={favorites}
+              onSelect={(l) => setCompare((c) => [...c.filter((x) => x.id !== l.id), l])}
+            />
           )}
         </div>
 
         <div className="mt-4">
-          {error ? <ErrorNote message={error} /> : !data ? <Skeleton className="h-80" /> : (
+          {error ? <ErrorNote message={error} /> : !data || data.length !== locs.length ? <Skeleton className="h-80" /> : (
             <HistoryChart series={data} locs={locs} metric={metric} unit={m.unit} comparing={comparing} loading={loading} />
           )}
         </div>
@@ -128,16 +148,70 @@ export function HistorySection({ location, favorites }: { location: WeatherLocat
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_1.4fr]">
         <Card>
-          <h3 className="mb-3 font-medium text-white">Windrose · {location.name}</h3>
+          <h3 className="mb-3 font-medium text-white">Windrose · {station.name}</h3>
           {wind.data ? <WindRose points={wind.data.points} /> : wind.error ? <ErrorNote message={wind.error} /> : <Skeleton className="h-64" />}
         </Card>
         <Card>
           <h3 className="mb-3 font-medium text-white">{t("Kennzahlen", "Key figures")} · {RANGES.find((r) => r.value === range)?.label}{range === "year" ? ` ${year}` : ""}</h3>
-          {data ? <StatsTable series={data} locs={locs} metric={metric} unit={m.unit} /> : <Skeleton className="h-48" />}
+          {data && data.length === locs.length ? <StatsTable series={data} locs={locs} metric={metric} unit={m.unit} /> : <Skeleton className="h-48" />}
         </Card>
       </div>
     </CollapsibleSection>
   );
+}
+
+function sourceLabel(series: HistorySeries[]) {
+  const sources = [...new Set(series.map((s) => s.source))];
+  const awekas = tr("AWEKAS Stationsmesswerte", "AWEKAS station readings");
+  const om = tr("Open-Meteo Modelldaten", "Open-Meteo model data");
+  if (sources.length === 1 && sources[0] === "awekas") return awekas;
+  if (sources.includes("awekas")) return `${awekas} + ${om}`;
+  if (sources[0] === "archive") return `Open-Meteo ${tr("Reanalyse-Archiv (ERA5, ab 1940)", "reanalysis archive (ERA5, from 1940)")}`;
+  return om;
+}
+
+/**
+ * AWEKAS serves daily values for 7/30 days while Open-Meteo serves hourly ones.
+ * Put every series on the same resolution so all lines share the same x positions
+ * (otherwise the main station's line is drawn on sparse, misaligned points).
+ */
+function alignSeries(series: HistorySeries[], metric: Metric) {
+  const daily = series.some((s) => s.resolution === "daily");
+  if (!daily) {
+    // AWEKAS uses "…T14:00:00", Open-Meteo "…T14:00". Without the same key,
+    // every row holds only one series value and connectNulls=false erases the lines.
+    return {
+      series: series.map((s) => ({ ...s, points: s.points.map((p) => ({ ...p, t: p.t.slice(0, 16) })) })),
+      hourly: true,
+    };
+  }
+  const aligned = series.map((s) => {
+    if (s.resolution === "daily") {
+      return { ...s, points: s.points.map((p) => ({ ...p, t: `${p.t.slice(0, 10)}T00:00:00` })) };
+    }
+    const groups = new Map<string, { sum: number; n: number; max: number | null; min: number | null }>();
+    s.points.forEach((p) => {
+      if (p.value == null) return;
+      const t = `${p.t.slice(0, 10)}T00:00:00`;
+      const g = groups.get(t) ?? { sum: 0, n: 0, max: null, min: null };
+      g.sum += p.value;
+      g.n += 1;
+      if (p.max != null) g.max = Math.max(g.max ?? -Infinity, p.max);
+      if (p.min != null) g.min = Math.min(g.min ?? Infinity, p.min);
+      groups.set(t, g);
+    });
+    return {
+      ...s,
+      resolution: "daily" as const,
+      points: [...groups.entries()].map(([t, g]) => ({
+        t,
+        value: metric === "precipitation" ? g.sum : g.sum / g.n,
+        ...(g.max != null ? { max: g.max } : {}),
+        ...(g.min != null ? { min: g.min } : {}),
+      })),
+    };
+  });
+  return { series: aligned, hourly: false };
 }
 
 function HistoryChart({
@@ -155,10 +229,10 @@ function HistoryChart({
   comparing: boolean;
   loading: boolean;
 }) {
-  const hourly = series[0].resolution === "hourly";
+  const { series: aligned, hourly } = useMemo(() => alignSeries(series, metric), [series, metric]);
   const rows = useMemo(() => {
     const map = new Map<string, Record<string, number | string | null | [number, number] | undefined>>();
-    series.forEach((s, si) =>
+    aligned.forEach((s, si) =>
       s.points.forEach((p) => {
         const r = map.get(p.t) ?? { t: p.t };
         r[`v${si}`] = p.value;
@@ -168,9 +242,9 @@ function HistoryChart({
       }),
     );
     return [...map.values()].sort((a, b) => String(a.t).localeCompare(String(b.t)));
-  }, [series, metric]);
+  }, [aligned, metric]);
 
-  const gaps = series[0].points.filter((p) => p.value == null).length;
+  const gaps = aligned[0]?.points.filter((p) => p.value == null).length ?? 0;
   const isBar = metric === "precipitation";
   const label = (t: string) => (hourly ? `${dayMonth(t)} ${time(t)}` : fullDate(t));
 
@@ -209,14 +283,14 @@ function HistoryChart({
               isBar ? (
                 <Bar key={i} dataKey={`v${i}`} fill={SERIES_COLORS[i]} radius={[2, 2, 0, 0]} />
               ) : (
-                <Line key={i} dataKey={`v${i}`} stroke={SERIES_COLORS[i]} strokeWidth={2} dot={false} connectNulls={false} type="monotone" />
+                <Line key={i} dataKey={`v${i}`} stroke={SERIES_COLORS[i]} strokeWidth={i === 0 ? 3 : 2} dot={false} connectNulls={false} type="monotone" />
               ),
             )}
           </ComposedChart>
         </ResponsiveContainer>
       </div>
       <p className="mt-2 text-xs text-slate-500">
-        {hourly ? tr("Stundenwerte", "Hourly values") : tr("Tageswerte", "Daily values")} · {tr("Quelle", "Source")}: Open-Meteo {series[0].source === "archive" ? tr("Reanalyse-Archiv (ERA5, ab 1940)", "reanalysis archive (ERA5, from 1940)") : tr("Modelldaten", "model data")}
+        {hourly ? tr("Stundenwerte", "Hourly values") : tr("Tageswerte", "Daily values")} · {tr("Quelle", "Source")}: {sourceLabel(series)}
         {gaps > 0 && <span className="text-amber-300"> · {tr(`${gaps} fehlende Werte als Lücke dargestellt (nicht interpoliert)`, `${gaps} missing values shown as gaps (not interpolated)`)}</span>}
       </p>
     </div>
@@ -244,6 +318,7 @@ function StatsTable({ series, locs, metric, unit }: { series: HistorySeries[]; l
 
   if (locs.length === 1) {
     const s = stats[0];
+    if (!s) return null;
     return (
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {metric === "precipitation" ? (
@@ -273,19 +348,23 @@ function StatsTable({ series, locs, metric, unit }: { series: HistorySeries[]; l
           </tr>
         </thead>
         <tbody className="divide-y divide-white/5 tabular-nums text-white">
-          {stats.map((s, i) => (
-            <tr key={locs[i].id}>
-              <td className="py-2">
-                <span className="mr-2 inline-block h-2.5 w-2.5 rounded-full" style={{ background: SERIES_COLORS[i] }} />
-                {locs[i].name}
-              </td>
-              {metric === "precipitation" ? (
-                <><td>{fmt(s.sum)} {unit}</td><td>{fmt(s.max)} {unit}</td></>
-              ) : (
-                <><td>{fmt(s.max)} {unit}</td><td>{fmt(s.min)} {unit}</td><td>{fmt(s.avg)} {unit}</td></>
-              )}
-            </tr>
-          ))}
+          {stats.map((s, i) => {
+            const loc = locs[i];
+            if (!loc) return null; // stale data from a previous station set
+            return (
+              <tr key={loc.id}>
+                <td className="py-2">
+                  <span className="mr-2 inline-block h-2.5 w-2.5 rounded-full" style={{ background: SERIES_COLORS[i] }} />
+                  {loc.name}
+                </td>
+                {metric === "precipitation" ? (
+                  <><td>{fmt(s.sum)} {unit}</td><td>{fmt(s.max)} {unit}</td></>
+                ) : (
+                  <><td>{fmt(s.max)} {unit}</td><td>{fmt(s.min)} {unit}</td><td>{fmt(s.avg)} {unit}</td></>
+                )}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

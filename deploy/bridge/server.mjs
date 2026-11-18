@@ -13,6 +13,7 @@
 import http from "node:http";
 import { readFileSync } from "node:fs";
 import mqtt from "mqtt";
+import { awekasHistory } from "./awekas.mjs";
 
 const env = process.env;
 const VERSION = env.BRIDGE_VERSION || "1.0.0";
@@ -420,7 +421,7 @@ async function loop() {
 // ------------------------------------------------------------------ HTTP (behind nginx at /api/ha/)
 
 http
-  .createServer((req, res) => {
+  .createServer(async (req, res) => {
     const url = new URL(req.url, "http://x");
     const send = (code, body, type = "application/json; charset=utf-8") => {
       res.writeHead(code, { "content-type": type, "access-control-allow-origin": "*" });
@@ -437,6 +438,23 @@ http
     }
     if (p === "health") return send(latest.size ? 200 : 503, { ok: latest.size > 0 });
     if (p === "homeassistant.yaml") return send(200, haPackageYaml(), "text/yaml; charset=utf-8");
+    if (p === "history") {
+      const id = Number(url.searchParams.get("id"));
+      const metric = String(url.searchParams.get("metric") ?? "");
+      const range = String(url.searchParams.get("range") ?? "24h");
+      if (!Number.isInteger(id) || !["24h", "7d", "30d", "12m", "year", "custom"].includes(range)) return send(400, { error: "bad request" });
+      const opts = {
+        year: url.searchParams.get("year") ?? undefined,
+        start: url.searchParams.get("start") ?? undefined,
+        end: url.searchParams.get("end") ?? undefined,
+      };
+      try {
+        return send(200, await awekasHistory(id, metric, range, opts));
+      } catch (e) {
+        log("AWEKAS history failed:", e.message);
+        return send(502, { error: e.message });
+      }
+    }
     const m = /^([a-z0-9-]+)(?:\.json)?$/.exec(p);
     const d = m && latest.get(m[1]);
     if (d) return send(200, { ...d.state, forecast: { daily: d.forecast.daily, hourly: d.forecast.hourly } });

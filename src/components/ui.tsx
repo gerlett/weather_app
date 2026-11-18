@@ -90,4 +90,4 @@ export const chartTheme = {
 };
 
 /** Distinct series colours for location comparison (validated against the dark background). */
-export const SERIES_COLORS = ["#38bdf8", "#f59e0b", "#a78bfa", "#34d399"];
+export const SERIES_COLORS = ["#38bdf8", "#f59e0b", "#a78bfa", "#34d399", "#f472b6", "#22d3ee"];

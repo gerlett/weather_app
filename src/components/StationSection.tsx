@@ -90,10 +90,12 @@ export function StationSection({ location, elevation }: { location: WeatherLocat
               <dd className="text-white">{location.region}</dd>
               <dt className="text-slate-400">{t("Koordinaten", "Coordinates")}</dt>
               <dd className="tabular-nums text-white">{location.latitude.toFixed(4)}° N, {location.longitude.toFixed(4)}° {t("O", "E")}</dd>
-              {elevation != null && (
+              {(location.elevation ?? elevation) != null && (
                 <>
-                  <dt className="text-slate-400">{t("Seehöhe (Modell)", "Elevation (model)")}</dt>
-                  <dd className="text-white">{Math.round(elevation)} m</dd>
+                  <dt className="text-slate-400">
+                    {location.elevation != null ? t("Seehöhe (Station)", "Elevation (station)") : t("Seehöhe (Modell)", "Elevation (model)")}
+                  </dt>
+                  <dd className="text-white">{Math.round(location.elevation ?? elevation ?? 0)} m</dd>
                 </>
               )}
               <dt className="text-slate-400">{t("Messnetz", "Network")}</dt>

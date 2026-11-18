@@ -2,21 +2,23 @@
 
 import { useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { CloudRain, Snowflake, Sun, Thermometer, Wind } from "lucide-react";
+import { CloudRain, Droplets, Gauge, Snowflake, Sun, Thermometer, Wind } from "lucide-react";
 import type { WeatherLocation } from "@/lib/locations";
 import { fetchClimate, type ClimateDaily } from "@/lib/openmeteo";
 import { fmt, fullDate, months } from "@/lib/format";
-import { useLang } from "@/lib/i18n";
+import { tr, useLang } from "@/lib/i18n";
 import { useAsync } from "@/hooks/useAsync";
 import NORMALS from "@/data/normals.json";
 import { Card, chartTheme, ErrorNote, Segmented, Skeleton, Stat } from "./ui";
 import { CollapsibleSection } from "./CollapsibleSection";
+import { StationPicker } from "./StationPicker";
+import { usePersistedStation } from "@/hooks/usePersistedStation";
 
 const thisYear = new Date().getFullYear();
 const YEARS = Array.from({ length: thisYear - 1944 + 1 }, (_, i) => thisYear - i);
 const YEAR_COLORS = ["#f59e0b", "#38bdf8", "#a78bfa", "#34d399", "#f472b6"];
 
-type Mode = "temp" | "rain";
+type Mode = "temp" | "rain" | "wind" | "pressure" | "humidity";
 
 /** Diverging temperature scale (cold blue → neutral → hot red) */
 function tempColor(t: number) {
@@ -47,22 +49,86 @@ function rainColor(mm: number) {
   return `rgba(56,189,248,${0.2 + f * 0.8})`;
 }
 
-type Monthly = { tmean: number | null; rain: number | null; sun: number | null };
+type Monthly = { tmean: number | null; rain: number | null; sun: number | null; wind: number | null; pressure: number | null; humidity: number | null };
 
 function monthly(d: ClimateDaily, year: number): Monthly[] {
   return Array.from({ length: 12 }, (_, m) => {
     const prefix = `${year}-${String(m + 1).padStart(2, "0")}`;
     const idx = d.time.map((t, i) => (t.startsWith(prefix) ? i : -1)).filter((i) => i >= 0);
-    const t = idx.map((i) => d.tmean[i]).filter((v): v is number => v != null);
+    const mean = (arr: (number | null)[]) => {
+      const v = idx.map((i) => arr[i]).filter((x): x is number => x != null);
+      return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
+    };
     const r = idx.map((i) => d.rain[i]).filter((v): v is number => v != null);
-    const s = idx.map((i) => d.sun[i]).filter((v): v is number => v != null);
     return {
-      tmean: t.length ? t.reduce((a, b) => a + b, 0) / t.length : null,
+      tmean: mean(d.tmean),
       rain: r.length ? r.reduce((a, b) => a + b, 0) : null,
-      sun: s.length ? s.reduce((a, b) => a + b, 0) / 3600 : null,
+      sun: mean(d.sun) === null ? null : mean(d.sun)! / 3600,
+      wind: mean(d.gust),
+      pressure: mean(d.pressure),
+      humidity: mean(d.humidity),
     };
   });
 }
+
+const RAIN_STOPS = [0.1, 1, 5, 15, 40];
+const WIND_STOPS = [0, 10, 20, 35, 60];
+const PRESSURE_STOPS = [980, 995, 1010, 1025, 1040];
+const HUMIDITY_STOPS = [0, 25, 50, 75, 100];
+const SEQ_COLORS = [[30, 58, 138], [2, 132, 199], [52, 211, 153], [250, 204, 21], [249, 115, 22]];
+// Humidity runs the other way: very dry (0 %) is red, saturated (100 %) is dark blue.
+const HUMIDITY_COLORS = [[239, 68, 68], [250, 204, 21], [132, 204, 22], [34, 211, 238], [30, 58, 138]];
+
+function sequential(v: number, stops: number[], colors = SEQ_COLORS) {
+  let i = 0;
+  while (i < stops.length - 2 && v > stops[i + 1]) i++;
+  const f = Math.max(0, Math.min(1, (v - stops[i]) / (stops[i + 1] - stops[i])));
+  const c0 = colors[i];
+  const c1 = colors[i + 1];
+  return `rgb(${c0.map((c, k) => Math.round(c + (c1[k] - c) * f)).join(",")})`;
+}
+
+type ModeMeta = {
+  de: string; en: string; titleDe: string; titleEn: string; compareDe: string; compareEn: string;
+  icon: typeof Thermometer; unit: string; chart: "line" | "bar";
+  daily: (d: ClimateDaily, i: number) => number | null;
+  monthly: (v: Monthly) => number | null;
+  stops: number[] | null;
+  color: (v: number) => string;
+};
+
+const MODES: Record<Mode, ModeMeta> = {
+  temp: {
+    de: "Temperatur", en: "Temperature", titleDe: "Tagesmitteltemperatur", titleEn: "Daily mean temperature",
+    compareDe: "Monatsmittel Temperatur", compareEn: "Monthly mean temperature",
+    icon: Thermometer, unit: "°C", chart: "line", daily: (d, i) => d.tmean[i], monthly: (v) => v.tmean,
+    stops: null, color: tempColor,
+  },
+  rain: {
+    de: "Niederschlag", en: "Precipitation", titleDe: "Tagesniederschlag", titleEn: "Daily precipitation",
+    compareDe: "Monatssumme Niederschlag", compareEn: "Monthly precipitation total",
+    icon: CloudRain, unit: "mm", chart: "bar", daily: (d, i) => d.rain[i], monthly: (v) => v.rain,
+    stops: RAIN_STOPS, color: rainColor,
+  },
+  wind: {
+    de: "Wind", en: "Wind", titleDe: "Tägliche Windböe", titleEn: "Daily wind gust",
+    compareDe: "Monatsmittel Windböe", compareEn: "Monthly mean wind gust",
+    icon: Wind, unit: "km/h", chart: "line", daily: (d, i) => d.gust[i], monthly: (v) => v.wind,
+    stops: WIND_STOPS, color: (v) => sequential(v, WIND_STOPS),
+  },
+  pressure: {
+    de: "Luftdruck", en: "Pressure", titleDe: "Tagesmittel Luftdruck", titleEn: "Daily mean pressure",
+    compareDe: "Monatsmittel Luftdruck", compareEn: "Monthly mean pressure",
+    icon: Gauge, unit: "hPa", chart: "line", daily: (d, i) => d.pressure[i], monthly: (v) => v.pressure,
+    stops: PRESSURE_STOPS, color: (v) => sequential(v, PRESSURE_STOPS),
+  },
+  humidity: {
+    de: "Luftfeuchte", en: "Humidity", titleDe: "Tagesmittel Luftfeuchte", titleEn: "Daily mean humidity",
+    compareDe: "Monatsmittel Luftfeuchte", compareEn: "Monthly mean humidity",
+    icon: Droplets, unit: "%", chart: "line", daily: (d, i) => d.humidity[i], monthly: (v) => v.humidity,
+    stops: HUMIDITY_STOPS, color: (v) => sequential(v, HUMIDITY_STOPS, HUMIDITY_COLORS),
+  },
+};
 
 type Normals = { tmean: number[]; tmax: number[]; tmin: number[]; rain: number[]; sun: number[]; elevation: number };
 
@@ -77,20 +143,23 @@ function normalsFor(id: string) {
 
 export function ClimateSection({ location }: { location: WeatherLocation }) {
   const { t, lang } = useLang();
+  const { station, setStation } = usePersistedStation(location, "wetter-perg:climate-station");
   const [year, setYear] = useState(thisYear);
   const [mode, setMode] = useState<Mode>("temp");
+  const meta = MODES[mode];
   const startYear = year - 4;
 
   // one request per year: completed years are immutable and get cached in the browser permanently
   const recent = useAsync(
     () =>
-      Promise.all(Array.from({ length: 5 }, (_, i) => fetchClimate(location, startYear + i, startYear + i))).then((parts) => {
-        const keys = ["time", "tmean", "tmax", "tmin", "rain", "sun", "gust"] as const;
+      Promise.all(Array.from({ length: 5 }, (_, i) => fetchClimate(station, startYear + i, startYear + i))).then((parts) => {
+        const keys = ["time", "tmean", "tmax", "tmin", "rain", "sun", "gust", "pressure", "humidity"] as const;
         return Object.fromEntries(keys.map((k) => [k, parts.flatMap((p) => p[k] as unknown[])])) as unknown as ClimateDaily;
       }),
-    `${location.id}:${location.latitude}-${startYear}-${year}`,
+    `${station.id}:${station.latitude}-${startYear}-${year}`,
   );
-  const norm = useMemo(() => normalsFor(location.id), [location.id]);
+  const norm = useMemo(() => normalsFor(station.id), [station.id]);
+  const hasNormal = !!norm && (mode === "temp" || mode === "rain");
 
   const comparison = useMemo(() => {
     if (!recent.data) return [];
@@ -98,12 +167,12 @@ export function ClimateSection({ location }: { location: WeatherLocation }) {
     const per = years.map((y) => monthly(recent.data!, y));
     return months().map((label, m) => {
       const row: Record<string, number | string | null> = { label };
-      years.forEach((y, k) => (row[String(y)] = mode === "temp" ? per[k][m].tmean : per[k][m].rain));
-      row.normal = norm ? (mode === "temp" ? norm[m].tmean : norm[m].rain) : null;
+      years.forEach((y, k) => (row[String(y)] = meta.monthly(per[k][m])));
+      row.normal = norm && (mode === "temp" || mode === "rain") ? (mode === "temp" ? norm[m].tmean : norm[m].rain) : null;
       return row;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- month labels follow the language
-  }, [recent.data, year, mode, norm, lang]);
+  }, [recent.data, year, norm, lang, meta]);
 
   const records = useMemo(() => {
     if (!recent.data) return null;
@@ -146,11 +215,11 @@ export function ClimateSection({ location }: { location: WeatherLocation }) {
         if (date.getMonth() !== m) return { kind: "none" as const };
         const iso = `${year}-${String(m + 1).padStart(2, "0")}-${String(day + 1).padStart(2, "0")}`;
         const i = lookup.get(iso);
-        const v = i == null ? null : mode === "temp" ? d.tmean[i] : d.rain[i];
+        const v = i == null ? null : meta.daily(d, i);
         return { kind: "day" as const, iso, v };
       }),
     );
-  }, [recent.data, year, mode]);
+  }, [recent.data, year, meta]);
 
   return (
     <CollapsibleSection
@@ -159,14 +228,16 @@ export function ClimateSection({ location }: { location: WeatherLocation }) {
       title={t(`Klimakalender ${year}`, `Climate calendar ${year}`)}
       actions={
         <div className="flex flex-wrap items-center gap-2">
+          <StationPicker value={station} onSelect={setStation} />
           <Segmented
             value={mode}
             onChange={setMode}
             size="sm"
-            options={[
-              { value: "temp", label: t("Temperatur", "Temperature"), icon: Thermometer },
-              { value: "rain", label: t("Niederschlag", "Precipitation"), icon: CloudRain },
-            ]}
+            options={(Object.keys(MODES) as Mode[]).map((key) => ({
+              value: key,
+              label: tr(MODES[key].de, MODES[key].en),
+              icon: MODES[key].icon,
+            }))}
           />
           <select value={year} onChange={(e) => setYear(Number(e.target.value))} aria-label={t("Jahr", "Year")} className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm text-white ring-1 ring-white/10">
             {YEARS.map((y) => <option key={y}>{y}</option>)}
@@ -180,7 +251,7 @@ export function ClimateSection({ location }: { location: WeatherLocation }) {
       <div className="grid gap-4 xl:grid-cols-[1.5fr_1fr]">
         <Card>
           <h3 className="mb-3 font-medium text-white">
-            {mode === "temp" ? t("Tagesmitteltemperatur", "Daily mean temperature") : t("Tagesniederschlag", "Daily precipitation")} · {t("jeder Tag des Jahres", "every day of the year")}
+            {tr(meta.titleDe, meta.titleEn)} · {t("jeder Tag des Jahres", "every day of the year")}
           </h3>
           {!calendar ? <Skeleton className="h-72" /> : (
             <div className="overflow-x-auto">
@@ -196,9 +267,9 @@ export function ClimateSection({ location }: { location: WeatherLocation }) {
                       c.kind === "none" ? <span key={d} /> : (
                         <span
                           key={d}
-                          title={`${fullDate(c.iso)}: ${c.v == null ? t("keine Daten", "no data") : `${fmt(c.v)} ${mode === "temp" ? "°C" : "mm"}`}`}
+                          title={`${fullDate(c.iso)}: ${c.v == null ? t("keine Daten", "no data") : `${fmt(c.v)} ${meta.unit}`}`}
                           className={`aspect-square rounded-[3px] ${c.v == null ? "bg-white/[0.03] ring-1 ring-inset ring-white/5" : ""}`}
-                          style={c.v == null ? undefined : { background: mode === "temp" ? tempColor(c.v) : rainColor(c.v) }}
+                          style={c.v == null ? undefined : { background: meta.color(c.v) }}
                         />
                       ),
                     )}
@@ -206,17 +277,17 @@ export function ClimateSection({ location }: { location: WeatherLocation }) {
                 ))}
               </div>
               <div className="mt-3 flex items-center gap-2 text-xs text-slate-400">
-                {mode === "temp" ? (
+                {meta.stops ? (
+                  <>
+                    <span>{fmt(meta.stops[0])} {meta.unit}</span>
+                    <span className="h-2 w-40 rounded-full" style={{ background: `linear-gradient(90deg, ${meta.stops.map(meta.color).join(",")})` }} />
+                    <span>{fmt(meta.stops[meta.stops.length - 1])}+ {meta.unit}</span>
+                  </>
+                ) : (
                   <>
                     <span>−15 °C</span>
                     <span className="h-2 w-40 rounded-full" style={{ background: `linear-gradient(90deg, ${[-15, -5, 0, 8, 15, 22, 30].map(tempColor).join(",")})` }} />
                     <span>30 °C</span>
-                  </>
-                ) : (
-                  <>
-                    <span>0 mm</span>
-                    <span className="h-2 w-40 rounded-full" style={{ background: `linear-gradient(90deg, ${[0.1, 1, 5, 15, 40].map(rainColor).join(",")})` }} />
-                    <span>40+ mm</span>
                   </>
                 )}
                 <span className="ml-auto">{t("Leere Felder = keine Daten", "Empty cells = no data")}</span>
@@ -245,29 +316,29 @@ export function ClimateSection({ location }: { location: WeatherLocation }) {
       <Card className="mt-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h3 className="font-medium text-white">
-            {t("Jahresvergleich", "Year comparison")} {year - 4}–{year} · {mode === "temp" ? t("Monatsmittel Temperatur", "Monthly mean temperature") : t("Monatssumme Niederschlag", "Monthly precipitation total")}
+            {t("Jahresvergleich", "Year comparison")} {year - 4}–{year} · {tr(meta.compareDe, meta.compareEn)}
           </h3>
           <span className="inline-flex items-center gap-1.5 text-xs text-slate-400">
-            {norm ? (
+            {hasNormal ? (
               <>
                 <span className="h-0.5 w-5 border-t-2 border-dashed border-white/60" /> {t("Klimamittel 1991–2020", "Climate normal 1991–2020")}
               </>
             ) : (
-              t("Klimamittel 1991–2020 nur für Stationen des Messnetzes verfügbar", "Climate normal 1991–2020 only available for stations of the network")
+              t("Klimamittel 1991–2020 nur für Temperatur und Niederschlag verfügbar", "Climate normal 1991–2020 only available for temperature and precipitation")
             )}
           </span>
         </div>
         {!recent.data ? <Skeleton className="h-72" /> : (
           <div className="h-72">
             <ResponsiveContainer>
-              {mode === "temp" ? (
+              {meta.chart === "line" ? (
                 <LineChart data={comparison} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
                   <CartesianGrid stroke={chartTheme.grid} vertical={false} />
                   <XAxis dataKey="label" stroke={chartTheme.axis} fontSize={11} tickLine={false} />
-                  <YAxis stroke={chartTheme.axis} fontSize={11} tickLine={false} unit="°" />
-                  <Tooltip {...chartTheme.tooltip} formatter={(v, n) => [`${fmt(Number(v))} °C`, n === "normal" ? t("Mittel 1991–2020", "Normal 1991–2020") : n]} />
+                  <YAxis stroke={chartTheme.axis} fontSize={11} tickLine={false} unit={meta.unit === "°C" ? "°" : ""} />
+                  <Tooltip {...chartTheme.tooltip} formatter={(v, n) => [`${fmt(Number(v), meta.unit === "hPa" ? 0 : 1)} ${meta.unit}`, n === "normal" ? t("Mittel 1991–2020", "Normal 1991–2020") : n]} />
                   <Legend formatter={(v: string) => (v === "normal" ? "1991–2020" : v)} />
-                  <Line dataKey="normal" stroke="rgba(255,255,255,0.6)" strokeDasharray="5 5" dot={false} strokeWidth={2} />
+                  {hasNormal && <Line dataKey="normal" stroke="rgba(255,255,255,0.6)" strokeDasharray="5 5" dot={false} strokeWidth={2} />}
                   {Array.from({ length: 5 }, (_, k) => (
                     <Line key={k} dataKey={String(year - k)} stroke={YEAR_COLORS[k]} strokeWidth={k === 0 ? 3 : 1.5} strokeOpacity={k === 0 ? 1 : 0.7} dot={k === 0} connectNulls={false} />
                   ))}
@@ -282,7 +353,7 @@ export function ClimateSection({ location }: { location: WeatherLocation }) {
                   {Array.from({ length: 5 }, (_, k) => k).reverse().map((k) => (
                     <Bar key={k} dataKey={String(year - k)} fill={YEAR_COLORS[k]} fillOpacity={k === 0 ? 1 : 0.55} radius={[2, 2, 0, 0]} />
                   ))}
-                  <Bar dataKey="normal" fill="rgba(255,255,255,0.35)" radius={[2, 2, 0, 0]} />
+                  {hasNormal && <Bar dataKey="normal" fill="rgba(255,255,255,0.35)" radius={[2, 2, 0, 0]} />}
                 </BarChart>
               )}
             </ResponsiveContainer>

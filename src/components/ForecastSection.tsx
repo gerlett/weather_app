@@ -1,21 +1,48 @@
 "use client";
 
 import { Area, Bar, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { Droplets, Navigation, Wind } from "lucide-react";
-import type { ForecastResponse } from "@/lib/openmeteo";
+import { Cloud, Droplets, Navigation, Wind } from "lucide-react";
+import type { WeatherLocation } from "@/lib/locations";
+import { FORECAST_MODELS, modelLabel, type ForecastModel } from "@/lib/forecastModels";
+import { useLiveWeather } from "@/hooks/useLiveWeather";
+import { usePersistedStation } from "@/hooks/usePersistedStation";
 import { weatherInfo } from "@/lib/weatherCodes";
 import { compass, dayMonth, fmt, time, weekday } from "@/lib/format";
 import { Card, chartTheme, Skeleton } from "./ui";
 import { CollapsibleSection } from "./CollapsibleSection";
-import { useLang } from "@/lib/i18n";
+import { StationPicker } from "./StationPicker";
+import { tr, useLang } from "@/lib/i18n";
 
-export function ForecastSection({ data }: { data?: ForecastResponse }) {
+export function ForecastSection({ location, model, onModelChange }: { location: WeatherLocation; model: ForecastModel; onModelChange: (m: ForecastModel) => void }) {
   const { t } = useLang();
+  const { station, setStation } = usePersistedStation(location, "wetter-perg:forecast-station");
+  const data = useLiveWeather(station, model).data;
   const eyebrow = t("Prognose", "Forecast");
   const title = t("Wettervorhersage", "Weather forecast");
+  const sourceChip = (
+    <label className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/10 px-2.5 py-1 text-sky-200 ring-1 ring-sky-400/30">
+      <Cloud className="h-3.5 w-3.5 shrink-0" aria-hidden />
+      <select
+        value={model}
+        onChange={(e) => onModelChange(e.target.value as ForecastModel)}
+        className="max-w-[11rem] bg-transparent text-sm focus:outline-none"
+        aria-label={t("Prognosemodell wählen", "Select forecast model")}
+      >
+        {FORECAST_MODELS.map((m) => (
+          <option key={m.value} value={m.value} className="bg-slate-900">{tr(m.de, m.en)}</option>
+        ))}
+      </select>
+    </label>
+  );
+  const actions = (
+    <div className="flex flex-wrap items-center gap-2">
+      <StationPicker value={station} onSelect={setStation} />
+      {sourceChip}
+    </div>
+  );
   if (!data) {
     return (
-      <CollapsibleSection id="vorhersage" eyebrow={eyebrow} title={title} defaultOpen>
+      <CollapsibleSection id="vorhersage" eyebrow={eyebrow} title={title} defaultOpen actions={actions}>
         <Skeleton className="h-72" />
       </CollapsibleSection>
     );
@@ -43,7 +70,7 @@ export function ForecastSection({ data }: { data?: ForecastResponse }) {
   const tMax = Math.max(...days.map(({ i }) => daily.temperature_2m_max[i] ?? -99));
 
   return (
-    <CollapsibleSection id="vorhersage" eyebrow={eyebrow} title={title} defaultOpen>
+    <CollapsibleSection id="vorhersage" eyebrow={eyebrow} title={title} defaultOpen actions={actions}>
       <div className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
         <Card>
           <div className="mb-3 flex items-center justify-between">
@@ -134,6 +161,9 @@ export function ForecastSection({ data }: { data?: ForecastResponse }) {
           </ul>
         </Card>
       </div>
+      <p className="mt-3 text-xs text-slate-500">
+        {t("Quelle", "Source")}: Open-Meteo · {modelLabel(model)} · {station.name} · {t("Modellwerte für die Koordinaten des Ortes", "model values for the location's coordinates")}
+      </p>
     </CollapsibleSection>
   );
 }

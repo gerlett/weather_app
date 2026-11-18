@@ -52,8 +52,8 @@ export function Imprint() {
           <h3 className="mt-5 font-semibold text-white">{t("Zweck der Website", "Purpose of the website")}</h3>
           <p className="mt-1">
             {t(
-              "Private, nicht-kommerzielle Website mit aktuellen Wetterwerten, Vorhersagen, Wetterhistorie und Klimaauswertungen für Perg/Thurnhof und den Strudengau. Alle Inhalte sind frei nutzbar. Wetterdaten: Modell-, Prognose- und Archivdaten von Open-Meteo.com (CC BY 4.0), Stationsmesswerte über das offizielle AWEKAS-Widget.",
-              "Private, non-commercial website with current weather values, forecasts, weather history and climate analyses for Perg/Thurnhof and the Strudengau. All content is free to use. Weather data: model, forecast and archive data from Open-Meteo.com (CC BY 4.0), station readings via the official AWEKAS widget.",
+              "Private, nicht-kommerzielle Website mit aktuellen Wetterwerten, Vorhersagen, Wetterhistorie und Klimaauswertungen für Perg/Thurnhof und Umgebung. Alle Inhalte sind frei nutzbar. Wetterdaten: Modell-, Prognose- und Archivdaten von Open-Meteo.com (CC BY 4.0), Stationsmesswerte über das offizielle AWEKAS-Widget.",
+              "Private, non-commercial website with current weather values, forecasts, weather history and climate analyses for Perg/Thurnhof and the surrounding area. All content is free to use. Weather data: model, forecast and archive data from Open-Meteo.com (CC BY 4.0), station readings via the official AWEKAS widget.",
             )}
           </p>
 

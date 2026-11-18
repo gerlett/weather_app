@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { WeatherLocation } from "@/lib/locations";
 import { fetchCurrent, fetchForecast, type CurrentWeather, type ForecastResponse } from "@/lib/openmeteo";
+import type { ForecastModel } from "@/lib/forecastModels";
 
 /** How often the important current values are re-checked. */
 export const LIVE_INTERVAL_MS = 60_000;
@@ -36,7 +37,7 @@ const visible = () => typeof document === "undefined" || document.visibilityStat
  * - paused while the tab is hidden, catches up immediately when it becomes visible again
  * No server, no database – each browser polls the public API itself.
  */
-export function useLiveWeather(loc: WeatherLocation) {
+export function useLiveWeather(loc: WeatherLocation, model: ForecastModel = "best_match") {
   const [forecast, setForecast] = useState<ForecastResponse>();
   const [live, setLive] = useState<LiveCurrent>();
   const [changes, setChanges] = useState<{ map: ChangeMap; at: number }>({ map: {}, at: 0 });
@@ -47,7 +48,7 @@ export function useLiveWeather(loc: WeatherLocation) {
 
   const liveRef = useRef<LiveCurrent | undefined>(undefined);
   const forecastAt = useRef(0);
-  const locKey = `${loc.id}:${loc.latitude}:${loc.longitude}`;
+  const locKey = `${loc.id}:${loc.latitude}:${loc.longitude}:${model}`;
   const locRef = useRef(locKey);
 
   const applyCurrent = useCallback((next: LiveCurrent) => {
@@ -73,13 +74,13 @@ export function useLiveWeather(loc: WeatherLocation) {
         if (full) {
           // Always fresh (never a cached forecast), and the live current values in the
           // same go – so on start the newest values and UV are there at once, not after a tick.
-          const [f, c] = await Promise.all([fetchForecast(loc, true), fetchCurrent(loc).catch(() => undefined)]);
+          const [f, c] = await Promise.all([fetchForecast(loc, true, model), fetchCurrent(loc, model).catch(() => undefined)]);
           if (locRef.current !== key) return;
           forecastAt.current = Date.now();
           setForecast(f);
           applyCurrent(c ? { ...f.current, ...c.current } : { ...f.current, uv_index: liveRef.current?.uv_index });
         } else {
-          const c = await fetchCurrent(loc);
+          const c = await fetchCurrent(loc, model);
           if (locRef.current !== key) return;
           applyCurrent(c.current);
         }

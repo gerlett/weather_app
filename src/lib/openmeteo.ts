@@ -6,6 +6,7 @@
  * No database: everything is fetched on demand and cached in memory for the session.
  */
 import type { WeatherLocation } from "./locations";
+import type { ForecastModel } from "./forecastModels";
 import { BUILD_ID } from "./version";
 import { getLang, tr } from "./i18n";
 
@@ -214,15 +215,21 @@ const CURRENT_VARS =
  * Current conditions only (+ the current hour's UV) – a tiny request (~1 API call)
  * for the live tracker that polls every minute. Never cached.
  */
-export function fetchCurrent(loc: WeatherLocation) {
+export function fetchCurrent(loc: WeatherLocation, model: ForecastModel = "best_match") {
   return getJson<{ current: CurrentWeather & { uv_index: number } }>(
     `${FORECAST}?` +
-      qs({ latitude: loc.latitude, longitude: loc.longitude, timezone: "auto", current: `${CURRENT_VARS},uv_index` }),
+      qs({
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+        timezone: "auto",
+        current: `${CURRENT_VARS},uv_index`,
+        ...(model !== "best_match" ? { models: model } : {}),
+      }),
     { fresh: true },
   );
 }
 
-export function fetchForecast(loc: WeatherLocation, fresh = false) {
+export function fetchForecast(loc: WeatherLocation, fresh = false, model: ForecastModel = "best_match") {
   return getJson<ForecastResponse>(
     `${FORECAST}?` +
       qs({
@@ -236,6 +243,7 @@ export function fetchForecast(loc: WeatherLocation, fresh = false) {
           "temperature_2m,apparent_temperature,precipitation,precipitation_probability,weather_code,pressure_msl,wind_speed_10m,wind_gusts_10m,relative_humidity_2m,uv_index,is_day",
         daily:
           "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,sunrise,sunset,sunshine_duration,uv_index_max,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant",
+        ...(model !== "best_match" ? { models: model } : {}),
       }),
     { fresh },
   );
@@ -257,7 +265,7 @@ export type HistoryPoint = {
 export type HistorySeries = {
   resolution: "hourly" | "daily";
   points: HistoryPoint[];
-  source: "forecast" | "archive";
+  source: "forecast" | "archive" | "awekas";
 };
 
 export type RangeKey = "24h" | "7d" | "30d" | "12m" | "year" | "custom";
@@ -383,6 +391,8 @@ export type ClimateDaily = {
   rain: (number | null)[];
   sun: (number | null)[];
   gust: (number | null)[];
+  pressure: (number | null)[];
+  humidity: (number | null)[];
 };
 
 export async function fetchClimate(loc: WeatherLocation, startYear: number, endYear: number): Promise<ClimateDaily> {
@@ -395,7 +405,7 @@ export async function fetchClimate(loc: WeatherLocation, startYear: number, endY
         timezone: "auto",
         start_date: `${startYear}-01-01`,
         end_date: end,
-        daily: "temperature_2m_mean,temperature_2m_max,temperature_2m_min,precipitation_sum,sunshine_duration,wind_gusts_10m_max",
+        daily: "temperature_2m_mean,temperature_2m_max,temperature_2m_min,precipitation_sum,sunshine_duration,wind_gusts_10m_max,pressure_msl_mean,relative_humidity_2m_mean",
       }),
   );
   return {
@@ -406,6 +416,8 @@ export async function fetchClimate(loc: WeatherLocation, startYear: number, endY
     rain: res.daily.precipitation_sum,
     sun: res.daily.sunshine_duration,
     gust: res.daily.wind_gusts_10m_max,
+    pressure: res.daily.pressure_msl_mean,
+    humidity: res.daily.relative_humidity_2m_mean,
   };
 }
 

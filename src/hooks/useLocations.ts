@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { DEFAULT_LOCATION, REGIONAL_STATIONS, type WeatherLocation } from "@/lib/locations";
+import { DEFAULT_LOCATION, ALL_STATIONS, type WeatherLocation } from "@/lib/locations";
 import { tr } from "@/lib/i18n";
 
 const KEY_SELECTED = "wetter-perg:selected"; // only written for a *manual* choice
@@ -49,9 +49,9 @@ export function distanceKm(a: { latitude: number; longitude: number }, b: { lati
 }
 
 export function nearestStation(pos: { latitude: number; longitude: number }) {
-  let best = REGIONAL_STATIONS[0];
+  let best = ALL_STATIONS[0];
   let bestKm = Infinity;
-  for (const s of REGIONAL_STATIONS) {
+  for (const s of ALL_STATIONS) {
     const d = distanceKm(pos, s);
     if (d < bestKm) {
       best = s;
@@ -125,7 +125,7 @@ export function useLocations() {
 
   useEffect(() => {
     // Refresh regional station definitions from code (e.g. a newly added awekasId).
-    const sync = (l: WeatherLocation) => REGIONAL_STATIONS.find((s) => s.id === l.id) ?? l;
+    const sync = (l: WeatherLocation) => ALL_STATIONS.find((s) => s.id === l.id) ?? l;
     setFavorites(read<WeatherLocation[]>(KEY_FAVORITES, [DEFAULT_LOCATION]).map(sync));
     setRecent(read<WeatherLocation[]>(KEY_RECENT, []));
     const manual = read<WeatherLocation | null>(KEY_SELECTED, null);
@@ -155,7 +155,7 @@ export function useLocations() {
     write(KEY_SELECTED, loc);
     setGeo((g) => ({ ...g, message: undefined }));
     // places from the search (not the fixed stations) stay in the dropdown
-    if (!REGIONAL_STATIONS.some((s) => s.id === loc.id) && loc.id !== "my-location") {
+    if (!ALL_STATIONS.some((s) => s.id === loc.id) && loc.id !== "my-location") {
       setRecent((r) => [loc, ...r.filter((x) => x.id !== loc.id)].slice(0, MAX_RECENT));
     }
   }, []);
