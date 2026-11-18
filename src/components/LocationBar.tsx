@@ -3,7 +3,7 @@
 import { ChevronDown, LocateFixed, Loader2, MapPin, Radio, Search, Star, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { REGIONAL_STATIONS, type WeatherLocation } from "@/lib/locations";
+import { ALL_STATIONS, type WeatherLocation } from "@/lib/locations";
 import { searchPlaces } from "@/lib/openmeteo";
 import type { GeoStatus } from "@/hooks/useLocations";
 import { useLang, type Lang } from "@/lib/i18n";
@@ -75,7 +75,7 @@ export function LocationBar({ selected, favorites, recent, onSelect, isFavorite,
   };
 
   const q = query.trim().toLowerCase();
-  const stations = REGIONAL_STATIONS.filter((s) => !q || s.name.toLowerCase().includes(q));
+  const stations = ALL_STATIONS.filter((s) => !q || s.name.toLowerCase().includes(q));
   const searched = recent.filter((l) => !isFavorite(l.id));
 
   const Row = ({ l, removable = false }: { l: WeatherLocation; removable?: boolean }) => (
@@ -109,7 +109,7 @@ export function LocationBar({ selected, favorites, recent, onSelect, isFavorite,
     <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/80 backdrop-blur-lg">
       <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2 sm:px-6">
         {/* Static export, no image optimiser: plain <img>. Assets come from scripts/generate-icons.mjs. */}
-        <Link href="/" className="flex shrink-0 items-center gap-2" aria-label={t("Wetter Strudengau – Startseite", "Wetter Strudengau – home")} title="Wetter Strudengau">
+        <Link href="/" className="flex shrink-0 items-center gap-2" aria-label={t("Wetter – Startseite", "Weather – home")} title="Wetter">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/icons/icon-192.png" alt="I like Thurnhof" width={192} height={192} className="h-12 w-12 shrink-0 sm:h-14 sm:w-14" />
         </Link>
@@ -190,7 +190,7 @@ export function LocationBar({ selected, favorites, recent, onSelect, isFavorite,
                   )}
                   {stations.length > 0 && (
                     <div>
-                      <p className="px-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">{t("Wetterstationen Strudengau", "Strudengau weather stations")}</p>
+                      <p className="px-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">{t("Wetterstationen in Ihrer Nähe", "Weather stations near you")}</p>
                       <ul className="mt-1">{stations.map((l) => <Row key={l.id} l={l} />)}</ul>
                     </div>
                   )}

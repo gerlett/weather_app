@@ -11,6 +11,8 @@ import { useAsync } from "@/hooks/useAsync";
 import { locale, useLang } from "@/lib/i18n";
 import { bucketLabel, downloadCsv, groupKey, IntervalPicker, RangePicker, useSpan, type Group } from "./RangePicker";
 import { Card, chartTheme, ErrorNote, Skeleton, Stat } from "./ui";
+import { StationPicker } from "./StationPicker";
+import { usePersistedStation } from "@/hooks/usePersistedStation";
 
 /** Default interval: per day (hourly only for spans of a day or less, monthly for very long spans). */
 const defaultGroup = (hours: number): Group => (hours <= 24 ? "hour" : hours <= 24 * 400 ? "day" : "month");
@@ -63,6 +65,7 @@ function aggregate(rows: SpanHour[], g: Group, m: SpanMetric): Bucket[] {
 
 export function SpanAnalysis({ location, initialMetric = "temperature", showMetricPicker = true }: { location: WeatherLocation; initialMetric?: string; showMetricPicker?: boolean }) {
   const { t } = useLang();
+  const { station, setStation } = usePersistedStation(location, "wetter-perg:span-station");
   const [metricId, setMetricId] = useState(initialMetric);
   const m = spanMetric(metricId);
   const span = useSpan(defaultGroup);
@@ -71,8 +74,8 @@ export function SpanAnalysis({ location, initialMetric = "temperature", showMetr
   const isSum = m.agg === "sum";
 
   const { data, error, loading } = useAsync(
-    () => (valid ? fetchHourlySpan(location, m.variable, start, end, isSum ? "accumulated" : "instant") : Promise.resolve([])),
-    `${location.id}:${location.latitude}:${m.variable}:${span.startStr}:${span.endStr}`,
+    () => (valid ? fetchHourlySpan(station, m.variable, start, end, isSum ? "accumulated" : "instant") : Promise.resolve([])),
+    `${station.id}:${station.latitude}:${m.variable}:${span.startStr}:${span.endStr}`,
   );
 
   const buckets = useMemo(() => (data ? aggregate(data, group, m) : []), [data, group, m]);
@@ -109,13 +112,17 @@ export function SpanAnalysis({ location, initialMetric = "temperature", showMetr
         ? `${bucketLabel(b.key, group, true)};${fmt(b.sum, d)};${fmt(b.cum, d)};${b.hours};${b.missing}`
         : `${bucketLabel(b.key, group, true)};${fmt(b.min, d)};${fmt(b.max, d)};${fmt(b.avg, d)};${b.hours};${b.missing}`,
     );
-    downloadCsv(`${m.id}_${location.id}_${span.startStr.replace(/[:T]/g, "-")}_${span.endStr.replace(/[:T]/g, "-")}.csv`, [head, ...rows]);
+    downloadCsv(`${m.id}_${station.id}_${span.startStr.replace(/[:T]/g, "-")}_${span.endStr.replace(/[:T]/g, "-")}.csv`, [head, ...rows]);
   };
 
   const when = (ts: string) => `${fullDate(ts)} ${time(ts)}`;
 
   return (
     <Card>
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <span className="text-xs uppercase tracking-wider text-slate-500">{t("Station", "Station")}</span>
+        <StationPicker value={station} onSelect={setStation} />
+      </div>
       {showMetricPicker && (
         <div className="mb-5 flex gap-1.5 overflow-x-auto pb-1">
           {SPAN_METRICS.map((x) => {

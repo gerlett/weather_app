@@ -4,7 +4,8 @@ import { Area, Bar, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Too
 import { X } from "lucide-react";
 import { useState } from "react";
 import type { WeatherLocation } from "@/lib/locations";
-import { fetchHistory, type Metric, type RangeKey } from "@/lib/openmeteo";
+import type { Metric, RangeKey } from "@/lib/openmeteo";
+import { fetchStationHistory } from "@/lib/history";
 import { dayMonth, fmt, time, weekday } from "@/lib/format";
 import { useAsync } from "@/hooks/useAsync";
 import { chartTheme, ErrorNote, Segmented, Skeleton } from "./ui";
@@ -29,7 +30,7 @@ export function MetricHistory({ location, metric, onClose }: { location: Weather
   const { t } = useLang();
   const [range, setRange] = useState<RangeKey>("24h");
   const m = METRIC_META[metric];
-  const { data, error } = useAsync(() => fetchHistory(location, metric, range), JSON.stringify([location.id, metric, range]));
+  const { data, error } = useAsync(() => fetchStationHistory(location, metric, range), JSON.stringify([location.id, metric, range]));
 
   const hourly = data?.resolution === "hourly";
   const points = (data?.points ?? []).map((p) => ({ ...p, label: hourly ? (range === "24h" ? time(p.t) : `${weekday(p.t)} ${time(p.t)}`) : dayMonth(p.t) }));
@@ -96,7 +97,7 @@ export function MetricHistory({ location, metric, onClose }: { location: Weather
             {metric === "precipitation"
               ? `${t("Summe", "Total")} ${fmt(sum)} mm`
               : `Min ${fmt(lo)} ${m.unit} · Max ${fmt(hi)} ${m.unit} · ${t("Mittel", "Mean")} ${fmt(values.length ? sum / values.length : undefined)} ${m.unit}`}
-            {" · "}{t("Modelldaten Open-Meteo", "Open-Meteo model data")}
+            {" · "}{data?.source === "awekas" ? t("Stationsmesswerte AWEKAS", "AWEKAS station readings") : t("Modelldaten Open-Meteo", "Open-Meteo model data")}
           </p>
         </>
       )}
