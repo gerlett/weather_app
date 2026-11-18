@@ -37,11 +37,11 @@ export function WindRose({ points }: { points: HistoryPoint[] }) {
     return `M${pt(a0, r0)} L${pt(a0, r1)} A${r1},${r1} 0 0 1 ${pt(a1, r1)} L${pt(a1, r0)} A${r0},${r0} 0 0 0 ${pt(a0, r0)} Z`;
   };
 
-  if (!valid.length) return <p className="py-10 text-center text-sm text-slate-400">{t("Keine Winddaten im gewählten Zeitraum.", "No wind data in the selected period.")}</p>;
+  if (!valid.length) return <p className="py-6 text-center text-sm text-slate-400 sm:py-10">{t("Keine Winddaten im gewählten Zeitraum.", "No wind data in the selected period.")}</p>;
 
   return (
-    <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-      <svg viewBox="0 0 260 260" className="w-full max-w-[260px]" role="img" aria-label={t("Windrose", "Wind rose")}>
+    <div className="flex flex-col items-center gap-2 sm:flex-row sm:items-start sm:gap-4">
+      <svg viewBox="0 0 260 260" className="w-full max-w-[200px] sm:max-w-[260px]" role="img" aria-label={t("Windrose", "Wind rose")}>
         {[0.25, 0.5, 0.75, 1].map((f) => (
           <circle key={f} cx={C} cy={C} r={R * f} fill="none" stroke="rgba(255,255,255,0.1)" />
         ))}
@@ -68,20 +68,20 @@ export function WindRose({ points }: { points: HistoryPoint[] }) {
           );
         })}
       </svg>
-      <div className="space-y-3 text-sm">
+      <div className="space-y-1.5 text-sm sm:space-y-3">
         <div>
           <p className="text-xs text-slate-400">{t("Hauptwindrichtung", "Prevailing direction")}</p>
-          <p className="text-lg font-semibold text-white">{COMPASS[dominant]}</p>
+          <p className="text-base font-semibold text-white sm:text-lg">{COMPASS[dominant]}</p>
         </div>
         <div>
           <p className="text-xs text-slate-400">{t("Mittlere Geschwindigkeit", "Mean speed")}</p>
-          <p className="text-lg font-semibold text-white">{fmt(avg)} km/h</p>
+          <p className="text-base font-semibold text-white sm:text-lg">{fmt(avg)} km/h</p>
         </div>
         <div>
           <p className="text-xs text-slate-400">{t("Windstille", "Calm")} (&lt; 2 km/h)</p>
-          <p className="text-lg font-semibold text-white">{fmt((calm / valid.length) * 100, 0)} %</p>
+          <p className="text-base font-semibold text-white sm:text-lg">{fmt((calm / valid.length) * 100, 0)} %</p>
         </div>
-        <ul className="space-y-1">
+        <ul className="space-y-0.5 sm:space-y-1">
           {SPEED_BINS.map((b) => (
             <li key={b.label} className="flex items-center gap-2 text-xs text-slate-300">
               <span className="h-3 w-3 rounded-sm" style={{ background: b.color }} /> {b.label} km/h

@@ -4,7 +4,7 @@ import { tr } from "@/lib/i18n";
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`min-w-0 rounded-2xl bg-white/[0.04] p-5 ring-1 ring-white/10 backdrop-blur-sm ${className}`}>{children}</div>
+    <div className={`min-w-0 rounded-2xl bg-white/[0.04] p-3 ring-1 ring-white/10 backdrop-blur-sm sm:p-5 ${className}`}>{children}</div>
   );
 }
 
@@ -32,7 +32,7 @@ export function Segmented<T extends string>({
   size?: "sm" | "md";
 }) {
   return (
-    <div className="inline-flex flex-wrap gap-1 rounded-xl bg-white/5 p-1 ring-1 ring-white/10" role="tablist">
+    <div className="inline-flex min-w-0 max-w-full flex-nowrap gap-1 overflow-x-auto rounded-xl bg-white/5 p-1 ring-1 ring-white/10" role="tablist">
       {options.map((o) => {
         const active = o.value === value;
         return (
@@ -41,8 +41,8 @@ export function Segmented<T extends string>({
             role="tab"
             aria-selected={active}
             onClick={() => onChange(o.value)}
-            className={`inline-flex items-center gap-1.5 rounded-lg font-medium transition ${
-              size === "sm" ? "px-2.5 py-1 text-xs" : "px-3 py-1.5 text-sm"
+            className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg font-medium transition ${
+              size === "sm" ? "px-2 py-1 text-[11px] sm:px-2.5 sm:text-xs" : "px-2.5 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm"
             } ${active ? "bg-sky-500 text-white shadow" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}
           >
             {o.icon && <o.icon className="h-4 w-4" />}
@@ -54,15 +54,15 @@ export function Segmented<T extends string>({
   );
 }
 
-export function Stat({ label, value, unit, sub }: { label: string; value: string; unit?: string; sub?: ReactNode }) {
+export function Stat({ label, value, unit, sub, compact = false }: { label: string; value: string; unit?: string; sub?: ReactNode; compact?: boolean }) {
   return (
-    <div className="rounded-xl bg-white/[0.04] p-3 ring-1 ring-white/10">
-      <p className="text-xs text-slate-400">{label}</p>
-      <p className="mt-1 text-xl font-semibold tabular-nums text-white">
+    <div className={`min-w-0 rounded-xl bg-white/[0.04] ring-1 ring-white/10 ${compact ? "p-2" : "p-3"}`}>
+      <p className={`truncate text-slate-400 ${compact ? "text-[10px] leading-tight" : "text-xs"}`}>{label}</p>
+      <p className={`font-semibold tabular-nums text-white ${compact ? "mt-0.5 text-base" : "mt-1 text-xl"}`}>
         {value}
-        {unit && <span className="ml-1 text-sm font-normal text-slate-400">{unit}</span>}
+        {unit && <span className={`font-normal text-slate-400 ${compact ? "ml-0.5 text-[10px]" : "ml-1 text-sm"}`}>{unit}</span>}
       </p>
-      {sub && <p className="mt-0.5 text-xs text-slate-400">{sub}</p>}
+      {sub && <p className={`truncate text-slate-400 ${compact ? "text-[10px]" : "mt-0.5 text-xs"}`}>{sub}</p>}
     </div>
   );
 }

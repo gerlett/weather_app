@@ -83,7 +83,7 @@ export function CollapsibleSection({
 
   return (
     <section id={id} className="scroll-mt-24">
-      <div className={`${open ? "mb-5" : ""} flex flex-wrap items-end justify-between gap-3`}>
+      <div className={`${open ? "mb-3 sm:mb-5" : ""} flex flex-wrap items-end justify-between gap-2 sm:gap-3`}>
         <button
           type="button"
           onClick={toggle}

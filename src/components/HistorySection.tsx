@@ -85,9 +85,11 @@ export function HistorySection({ location, favorites }: { location: WeatherLocat
       eyebrow={t("Wetterhistorie", "Weather history")}
       title={t("Verlauf & Statistik", "History & statistics")}
       actions={
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex min-w-0 flex-nowrap items-center gap-1 sm:gap-2">
           <StationPicker value={station} onSelect={setStation} />
-          <Segmented value={range} options={RANGES} onChange={setRange} size="sm" />
+          <div className="min-w-0 flex-1">
+            <Segmented value={range} options={RANGES} onChange={setRange} size="sm" />
+          </div>
         </div>
       }
     >
@@ -115,7 +117,7 @@ export function HistorySection({ location, favorites }: { location: WeatherLocat
         </div>
 
         {/* comparison chips */}
-        <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
+        <div className="mt-3 flex flex-wrap items-center gap-1.5 text-sm sm:gap-2">
           <span className="text-xs uppercase tracking-wider text-slate-500">{t("Vergleich", "Compare")}</span>
           {locs.map((l, i) => (
             <span key={l.id} className="inline-flex items-center gap-1.5 rounded-full bg-white/5 py-1 pl-2.5 pr-1.5 ring-1 ring-white/10">
@@ -146,7 +148,7 @@ export function HistorySection({ location, favorites }: { location: WeatherLocat
         </div>
       </Card>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_1.4fr]">
+      <div className="mt-3 grid gap-2 sm:gap-4 lg:grid-cols-[1fr_1.4fr]">
         <Card>
           <h3 className="mb-3 font-medium text-white">Windrose · {station.name}</h3>
           {wind.data ? <WindRose points={wind.data.points} /> : wind.error ? <ErrorNote message={wind.error} /> : <Skeleton className="h-64" />}
@@ -320,18 +322,18 @@ function StatsTable({ series, locs, metric, unit }: { series: HistorySeries[]; l
     const s = stats[0];
     if (!s) return null;
     return (
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
         {metric === "precipitation" ? (
           <>
-            <Stat label={tr("Summe", "Total")} value={fmt(s.sum)} unit={unit} />
-            <Stat label={tr("Max. Einzelwert", "Max. single value")} value={fmt(s.max)} unit={unit} sub={when(s.maxAt, s.resolution)} />
-            <Stat label={s.resolution === "daily" ? tr("Regentage (≥ 1 mm)", "Rain days (≥ 1 mm)") : tr("Stunden mit Regen", "Hours with rain")} value={String(s.wetDays)} />
+            <Stat compact label={tr("Summe", "Total")} value={fmt(s.sum)} unit={unit} />
+            <Stat compact label={tr("Max. Einzelwert", "Max. single value")} value={fmt(s.max)} unit={unit} sub={when(s.maxAt, s.resolution)} />
+            <Stat compact label={s.resolution === "daily" ? tr("Regentage (≥ 1 mm)", "Rain days (≥ 1 mm)") : tr("Stunden mit Regen", "Hours with rain")} value={String(s.wetDays)} />
           </>
         ) : (
           <>
-            <Stat label="Maximum" value={fmt(s.max)} unit={unit} sub={when(s.maxAt, s.resolution)} />
-            <Stat label="Minimum" value={fmt(s.min)} unit={unit} sub={when(s.minAt, s.resolution)} />
-            <Stat label={tr("Mittelwert", "Mean")} value={fmt(s.avg)} unit={unit} />
+            <Stat compact label="Maximum" value={fmt(s.max)} unit={unit} sub={when(s.maxAt, s.resolution)} />
+            <Stat compact label="Minimum" value={fmt(s.min)} unit={unit} sub={when(s.minAt, s.resolution)} />
+            <Stat compact label={tr("Mittelwert", "Mean")} value={fmt(s.avg)} unit={unit} />
           </>
         )}
       </div>

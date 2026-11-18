@@ -95,7 +95,7 @@ function Metric({
     <Tag
       key={changed ? changedAt : "static"}
       {...(onShow ? { type: "button" as const, onClick: onShow, "aria-pressed": !!active, title: tr(`Verlauf ${label} anzeigen`, `Show ${label} history`) } : {})}
-      className={`block w-full rounded-2xl p-4 text-left ring-1 transition ${
+      className={`block w-full rounded-2xl p-2.5 text-left ring-1 transition sm:p-4 ${
         active ? "bg-sky-400/10 ring-sky-400/60" : "bg-white/[0.04] ring-white/10 hover:bg-white/[0.07]"
       } ${onShow ? "cursor-pointer hover:ring-sky-400/40" : ""} ${changed ? "animate-[flash_2.5s_ease-out]" : ""}`}
     >
@@ -104,12 +104,12 @@ function Metric({
         {label}
         {onShow && <LineChart className={`ml-auto h-3.5 w-3.5 ${active ? "text-sky-300" : "text-slate-500"}`} aria-hidden />}
       </div>
-      <p className="mt-2 text-3xl font-semibold tabular-nums text-white">
+      <p className="mt-1 text-2xl font-semibold tabular-nums text-white sm:mt-2 sm:text-3xl">
         {value}
         <span className="ml-1 text-base font-normal text-slate-400">{unit}</span>
         <Delta delta={delta} digits={digits} at={changedAt} />
       </p>
-      <div className="mt-1 space-y-0.5 text-xs text-slate-400">{children}</div>
+      <div className="mt-0.5 space-y-0 text-[11px] text-slate-400 sm:mt-1 sm:space-y-0.5 sm:text-xs">{children}</div>
     </Tag>
   );
 }
@@ -130,7 +130,7 @@ export function CurrentSection({ location, data, loading, live }: { location: We
     return (
       <section id="aktuell" className="grid gap-4 lg:grid-cols-[1.1fr_1.9fr]">
         <Skeleton className="h-80" />
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-32" />)}
         </div>
       </section>
@@ -151,10 +151,10 @@ export function CurrentSection({ location, data, loading, live }: { location: We
   const at = live.changes.at;
 
   return (
-    <section id="aktuell" className={`grid scroll-mt-24 gap-4 lg:grid-cols-[1.1fr_1.9fr] ${loading ? "opacity-70" : ""} transition-opacity`}>
+    <section id="aktuell" className={`grid scroll-mt-24 gap-2 sm:gap-4 lg:grid-cols-[1.1fr_1.9fr] ${loading ? "opacity-70" : ""} transition-opacity`}>
       {/* Hero + (on click of a value card) its history right below */}
-      <div className="flex min-w-0 flex-col gap-4">
-      <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${bg} p-6 shadow-2xl ring-1 ring-white/10 sm:p-8`}>
+      <div className="flex min-w-0 flex-col gap-2 sm:gap-4">
+      <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${bg} p-4 shadow-2xl ring-1 ring-white/10 sm:p-8`}>
         <div className="pointer-events-none absolute -right-10 -top-10 opacity-20">
           <info.Icon className="h-64 w-64 text-white" strokeWidth={1} />
         </div>
@@ -168,7 +168,7 @@ export function CurrentSection({ location, data, loading, live }: { location: We
           <info.Icon className="h-16 w-16 text-white drop-shadow animate-[float_6s_ease-in-out_infinite]" strokeWidth={1.5} />
           <p
             key={ch.temperature_2m != null ? at : "static"}
-            className={`text-7xl font-light leading-none tabular-nums text-white sm:text-8xl ${ch.temperature_2m != null ? "animate-[pop_1.2s_ease-out]" : ""}`}
+            className={`text-6xl font-light leading-none tabular-nums text-white sm:text-8xl ${ch.temperature_2m != null ? "animate-[pop_1.2s_ease-out]" : ""}`}
           >
             {fmt(c.temperature_2m)}
             <span className="align-top text-3xl">°C</span>
@@ -210,7 +210,7 @@ export function CurrentSection({ location, data, loading, live }: { location: We
       </div>
 
       {/* Measurements */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-3">
         <Metric icon={Thermometer} label={t("Temperatur", "Temperature")} value={fmt(c.temperature_2m)} unit="°C" delta={ch.temperature_2m} changedAt={at} active={graph === "temperature"} onShow={show("temperature")}>
           <p>{t("Taupunkt", "Dew point")} {fmt(c.dew_point_2m)} °C</p>
           <p>{t("Gefühlt", "Feels like")} {fmt(c.apparent_temperature)} °C</p>

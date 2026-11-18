@@ -1,6 +1,13 @@
 {
   "entries": [
     {
+      "version": "0.2.1",
+      "date": "2026-11-18",
+      "items": [
+        { "de": "Mobile Optimierung: Stations- und Modellauswahl, Zeitraumwahl, Kennzahlen und Klima-Jahr stehen jetzt auf einer Zeile; Karten, Windrose und Aktualswerte brauchen weniger Platz.", "en": "Mobile optimisation: station and model selection, range chooser, key figures and climate year now stay on one line; cards, wind rose and current values need less space." }
+      ]
+    },
+    {
       "version": "0.2.0",
       "date": "2026-11-18",
       "items": [
