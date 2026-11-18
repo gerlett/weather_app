@@ -35,9 +35,9 @@ export function ForecastSection({ location, model, onModelChange }: { location: 
     </label>
   );
   const actions = (
-    <div className="flex w-full min-w-0 flex-col gap-1 sm:w-auto sm:flex-row sm:items-center sm:gap-2">
-      <div className="flex w-full justify-start sm:w-auto"><StationPicker value={station} onSelect={setStation} /></div>
-      <div className="flex w-full justify-end sm:w-auto">{sourceChip}</div>
+    <div className="flex w-full min-w-0 items-center justify-between gap-1 sm:w-auto sm:justify-start sm:gap-2">
+      <StationPicker value={station} onSelect={setStation} />
+      {sourceChip}
     </div>
   );
   if (!data) {

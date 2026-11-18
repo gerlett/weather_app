@@ -1,6 +1,13 @@
 {
   "entries": [
     {
+      "version": "0.2.3",
+      "date": "2026-11-18",
+      "items": [
+        { "de": "Mobil stehen Stationsauswahl und Jahr bzw. Prognosemodell jetzt auf derselben Zeile: die Station links, der zweite Wert rechts.", "en": "On mobile the station picker and the year/forecast model now share one line: the station on the left, the second value on the right." }
+      ]
+    },
+    {
       "version": "0.2.2",
       "date": "2026-11-18",
       "items": [
