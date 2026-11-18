@@ -1,6 +1,17 @@
 {
   "entries": [
     {
+      "version": "0.2.0",
+      "date": "2026-11-18",
+      "items": [
+        { "de": "Die Wetterstationen in der Nähe (110 AWEKAS-Stationen) sind jetzt im Stationsmenü mit weltweiter Ortssuche auswählbar; die gewählte Station erscheint auch in „Über die Station“.", "en": "Nearby weather stations (110 AWEKAS stations) can now be selected in the station menu with worldwide place search; the chosen station also appears in “About the station”." },
+        { "de": "Verlauf und Kennzahlen kommen für Stationen mit AWEKAS-ID aus den echten Stationsmesswerten (alle Zeiträume), mit Vergleich bis zu 6 Orten. Auswahl und Vergleich werden im Browser gespeichert.", "en": "History and key figures now use real station readings for stations with an AWEKAS ID (all ranges), with comparison of up to 6 places. Selection and comparison are stored in the browser." },
+        { "de": "Die Wettervorhersage lässt jetzt zwischen mehreren kostenlosen Prognosemodellen wählen; Prognose, Klima, Zeitraum-Auswertung und Verlauf haben jeweils eine eigene, gespeicherte Stationsauswahl.", "en": "The forecast can now switch between several free forecast models; forecast, climate, period analysis and history each have their own saved station selection." },
+        { "de": "Der Klimakalender bietet jetzt auch Wind, Luftdruck und Luftfeuchte (trocken rot, feucht dunkelblau).", "en": "The climate calendar now also offers wind, pressure and humidity (dry red, wet dark blue)." },
+        { "de": "Die Bereiche der Startseite lassen sich per Drag & Drop sortieren; die Reihenfolge bleibt nach dem Neuladen erhalten.", "en": "The dashboard sections can be reordered by drag & drop; the order is kept after a reload." }
+      ]
+    },
+    {
       "version": "0.1.13",
       "date": "2026-11-15",
       "items": [
